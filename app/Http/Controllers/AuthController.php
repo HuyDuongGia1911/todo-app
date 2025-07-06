@@ -4,6 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+
 class AuthController extends Controller
 {
     //show view register don gian
@@ -39,19 +41,14 @@ class AuthController extends Controller
     public function showLogin() {
         return view('login');
     }
-
-    public function login(Request $request) {
+public function login(Request $request) {
         // $user = DB::table('users')->where('email', $request->email)->first();
         $user = User::where('email', $request->email)->first();
-        if ($user && Hash::check($request->password, $user->password)) {
-            // luu ca object
-            session(['user' => $user]);
-
-            // luu name va email
-            // session(['user' => ['name' => $user->name, 'email' => $user->email]]);
+         if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+           
 
             return redirect('/dashboard')->with('success', 'Login successful');
-        }
+    }
 
         return back()->with('error', 'Lỗi');
     }

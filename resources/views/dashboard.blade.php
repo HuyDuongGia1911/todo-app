@@ -1,13 +1,7 @@
+@extends('layouts.app')
 
-
-@php
-    $user = session()->get('user');
-@endphp
-
-@if($user)
-    <h1>Welcome, {{ $user->name }}</h1>
-@endif
-<a href="/logout">Logout</a>
-@if(session('success'))
-    <p style="color: green">{{ session('success') }}</p>
-@endif
+@section('content')
+    <h1 class="mb-4">Dashboard</h1>
+    <p>Chào, {{ Auth::user()->name }}</p>
+    <p>Bạn đã tạo <strong>{{ $taskCount }}</strong> công việc.</p>
+@endsection
