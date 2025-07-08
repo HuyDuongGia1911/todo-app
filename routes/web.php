@@ -38,6 +38,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/plan', [TaskController::class, 'storePlan']);
     Route::get('/deadline', [TaskController::class, 'deadline']);
     Route::get('/export', [TaskController::class, 'export']);
+    Route::get('/all', [TaskController::class, 'all'])->name('tasks.all');
+
 
     // ⚠️ Setup route vẫn giữ, nhưng không còn các resource riêng nữa
     Route::get('/setup', [SetupController::class, 'index']);

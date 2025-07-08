@@ -38,7 +38,7 @@
             <li class="nav-item"><a href="/dashboard" class="nav-link bg-primary text-white rounded px-3 py-2">🏠 Dashboard</a></li>
             <li class="nav-item"><a href="/tasks" class="nav-link bg-success text-white rounded px-3 py-2">📅 Hôm nay có gì?</a></li>
             <li class="nav-item"><a href="/plan" class="nav-link bg-warning text-dark rounded px-3 py-2">📝 Lên kế hoạch</a></li>
-            <li class="nav-item"><a href="/setup" class="nav-link bg-info text-white rounded px-3 py-2">➕ Tạo mới</a></li>
+           
             <li class="nav-item"><a href="/all" class="nav-link bg-secondary text-white rounded px-3 py-2">📂 Tất cả công việc</a></li>
             <li class="nav-item"><a href="/deadline" class="nav-link bg-danger text-white rounded px-3 py-2">⏰ Deadline</a></li>
             <li class="nav-item"><a href="/export" class="nav-link bg-dark text-white rounded px-3 py-2">📤 Xuất Excel</a></li>

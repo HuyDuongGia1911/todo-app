@@ -77,7 +77,8 @@ class TaskController extends Controller
             'progress'   => $request->progress,
             'file_link'  => $request->file_link,
         ]);
-        return redirect()->route('tasks.index');
+         $redirect = $request->redirect_back ?? route('tasks.index');
+        return redirect($redirect)->with('success', 'Đã thêm công việc!');
     }
 
     public function edit(Task $task)//lay task theo id, tra ve view
@@ -129,7 +130,8 @@ class TaskController extends Controller
         'file_link'  => $request->file_link,
     ]);
 
-    return redirect()->route('tasks.index');
+   $redirect = $request->redirect_back ?? route('tasks.index');
+        return redirect($redirect)->with('success', 'Đã cập nhật công việc!');
 }
 
 
@@ -170,7 +172,23 @@ class TaskController extends Controller
 
     return redirect('/plan')->with('success', 'Đã lên kế hoạch');
 }
-    public function all() {}
+   public function all(Request $request)
+    {
+        $query = Task::query();
+
+        if ($request->filled('start_date')) {
+            $query->whereDate('task_date', '>=', $request->start_date);
+        }
+
+        if ($request->filled('end_date')) {
+            $query->whereDate('task_date', '<=', $request->end_date);
+        }
+
+        $tasks = $query->orderBy('task_date', 'desc')->get();
+
+        return view('tasks.all', compact('tasks'));
+    }
+
     public function deadline() {}
     public function export() {}
 }
