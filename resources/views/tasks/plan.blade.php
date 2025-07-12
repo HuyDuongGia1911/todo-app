@@ -11,53 +11,37 @@
         <input type="date" name="task_date" class="form-control">
     </div>
 
-    <div class="mb-3">
-        <label>Ca:</label>
-        <select name="shift" class="form-control">
-            @foreach($shifts as $shift)
-                <option value="{{ $shift->shift_name }}">{{ $shift->shift_name }}</option>
-            @endforeach
-        </select>
-    </div>
-
-    <div class="mb-3">
-        <label>Loại:</label>
-        <select name="type" class="form-control">
-            @foreach($types as $type)
-                <option value="{{ $type->type_name }}">{{ $type->type_name }}</option>
-            @endforeach
-        </select>
-    </div>
-
-    <div class="mb-3">
-        <label>Tên task:</label>
-        <select name="title" class="form-control">
-            @foreach($titles as $title)
-                <option value="{{ $title->title_name }}">{{ $title->title_name }}</option>
-            @endforeach
-        </select>
-    </div>
-
-    <div class="mb-3">
-        <label>Người phụ trách:</label>
-        <select name="supervisor" class="form-control">
-            @foreach($supervisors as $supervisor)
-                <option value="{{ $supervisor->supervisor_name }}">{{ $supervisor->supervisor_name }}</option>
-            @endforeach
-        </select>
-    </div>
-
-    <div class="mb-3">
-        <label>Trạng thái:</label>
-        <select name="status" class="form-control">
-            @foreach($statuses as $status)
-                <option value="{{ $status->status_name }}">{{ $status->status_name }}</option>
-            @endforeach
-        </select>
-    </div>
-
-
+    @foreach ([
+        ['name' => 'shift', 'label' => 'Ca', 'data' => $shifts],
+        ['name' => 'type', 'label' => 'Loại', 'data' => $types],
+        ['name' => 'title', 'label' => 'Tên task', 'data' => $titles],
+        ['name' => 'supervisor', 'label' => 'Người phụ trách', 'data' => $supervisors],
+        ['name' => 'status', 'label' => 'Trạng thái', 'data' => $statuses],
+    ] as $dropdown)
+        <div class="mb-3">
+            <label>{{ $dropdown['label'] }}:</label>
+            <select name="{{ $dropdown['name'] }}" class="form-control select2" id="{{ $dropdown['name'] }}-select">
+                @foreach($dropdown['data'] as $item)
+                    <option value="{{ $item[ $dropdown['name'].'_name' ] }}">{{ $item[ $dropdown['name'].'_name' ] }}</option>
+                @endforeach
+            </select>
+        </div>
+    @endforeach
 
     <button type="submit" class="btn btn-primary">Lên kế hoạch</button>
 </form>
+@endsection
+
+@section('scripts')
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('.select2').select2({
+        tags: true,
+        placeholder: "Chọn hoặc nhập...",
+        width: '100%'
+    });
+});
+</script>
 @endsection

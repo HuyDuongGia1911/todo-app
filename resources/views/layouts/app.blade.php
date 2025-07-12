@@ -23,6 +23,8 @@
 </head>
 
 <body class="bg-light">
+    <!-- jQuery (bắt buộc để Select2 hoạt động) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <div class="d-flex min-vh-100">
@@ -40,7 +42,7 @@
             <li class="nav-item"><a href="/plan" class="nav-link bg-warning text-dark rounded px-3 py-2">📝 Lên kế hoạch</a></li>
            
             <li class="nav-item"><a href="/all" class="nav-link bg-secondary text-white rounded px-3 py-2">📂 Tất cả công việc</a></li>
-            <li class="nav-item"><a href="/deadline" class="nav-link bg-danger text-white rounded px-3 py-2">⏰ Deadline</a></li>
+            <li class="nav-item"><a href="/deadlines" class="nav-link bg-danger text-white rounded px-3 py-2">⏰ Deadline</a></li>
             <li class="nav-item"><a href="/export" class="nav-link bg-dark text-white rounded px-3 py-2">📤 Xuất Excel</a></li>
             <li class="nav-item mt-4"><a href="/logout" class="nav-link bg-danger bg-opacity-75 text-white rounded px-3 py-2">🚪 Logout</a></li>
         </ul>
@@ -91,6 +93,6 @@
         }
     }
 </script>
-@yield('scripts') //dac biet quan trong , phai co, no gan script trang con vao layout
+@yield('scripts') 
 </body>
 </html>

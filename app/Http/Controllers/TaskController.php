@@ -156,7 +156,31 @@ class TaskController extends Controller
 }
     public function storePlan(Request $request)
 {
-    //luu truc tiep ten
+    // Thêm Shift nếu chưa có và không rỗng
+    if (!empty($request->shift) && !\App\Models\Shift::where('shift_name', $request->shift)->exists()) {
+        \App\Models\Shift::create(['shift_name' => $request->shift]);
+    }
+
+    // Thêm Type nếu chưa có và không rỗng
+    if (!empty($request->type) && !\App\Models\TaskType::where('type_name', $request->type)->exists()) {
+        \App\Models\TaskType::create(['type_name' => $request->type]);
+    }
+
+    // Thêm Title nếu chưa có và không rỗng
+    if (!empty($request->title) && !\App\Models\TaskTitle::where('title_name', $request->title)->exists()) {
+        \App\Models\TaskTitle::create(['title_name' => $request->title]);
+    }
+
+    // Thêm Supervisor nếu chưa có và không rỗng
+    if (!empty($request->supervisor) && !\App\Models\Supervisor::where('supervisor_name', $request->supervisor)->exists()) {
+        \App\Models\Supervisor::create(['supervisor_name' => $request->supervisor]);
+    }
+
+    // Thêm Status nếu chưa có và không rỗng
+    if (!empty($request->status) && !\App\Models\Status::where('status_name', $request->status)->exists()) {
+        \App\Models\Status::create(['status_name' => $request->status]);
+    }
+
     Task::create([
         'user_id'    => Auth::id(),
         'task_date'  => $request->task_date,
@@ -166,29 +190,28 @@ class TaskController extends Controller
         'supervisor' => $request->supervisor,
         'status'     => $request->status,
         'detail'     => $request->detail,
-         'progress'   => 0,
+        'progress'   => 0,
         'file_link'  => $request->file_link,
     ]);
 
     return redirect('/plan')->with('success', 'Đã lên kế hoạch');
 }
-   public function all(Request $request)
-    {
-        $query = Task::query();
+//    public function all(Request $request)
+//     {
+//         $query = Task::query();
 
-        if ($request->filled('start_date')) {
-            $query->whereDate('task_date', '>=', $request->start_date);
-        }
+//         if ($request->filled('start_date')) {
+//             $query->whereDate('task_date', '>=', $request->start_date);
+//         }
 
-        if ($request->filled('end_date')) {
-            $query->whereDate('task_date', '<=', $request->end_date);
-        }
+//         if ($request->filled('end_date')) {
+//             $query->whereDate('task_date', '<=', $request->end_date);
+//         }
 
-        $tasks = $query->orderBy('task_date', 'desc')->get();
+//         $tasks = $query->orderBy('task_date', 'desc')->get();
 
-        return view('tasks.all', compact('tasks'));
-    }
+//         return view('tasks.all', compact('tasks'));
+//     }
 
-    public function deadline() {}
-    public function export() {}
+ 
 }

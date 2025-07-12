@@ -4,7 +4,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\SetupController;
-
+use App\Http\Controllers\DeadlineController;
+use App\Http\Controllers\TaskExportController;
+use App\Http\Controllers\AllTaskController;
 // ========================================
 // ✔️ AUTH routes
 // ========================================
@@ -38,8 +40,18 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/plan', [TaskController::class, 'storePlan']);
     Route::get('/deadline', [TaskController::class, 'deadline']);
     Route::get('/export', [TaskController::class, 'export']);
-    Route::get('/all', [TaskController::class, 'all'])->name('tasks.all');
-
+    Route::resource('deadlines', DeadlineController::class);
+    Route::get('/tasks/export', [TaskExportController::class, 'export'])->name('tasks.export');
+    Route::get('/export', [TaskExportController::class, 'showExport'])->name('export.index');
+    // Route nhóm cho 'all'
+    Route::prefix('all')->name('all.')->group(function() {
+    Route::get('/', [AllTaskController::class, 'index'])->name('index');
+    Route::get('/create', [AllTaskController::class, 'create'])->name('create');
+    Route::post('/', [AllTaskController::class, 'store'])->name('store');
+    Route::get('/{task}/edit', [AllTaskController::class, 'edit'])->name('edit');
+    Route::put('/{task}', [AllTaskController::class, 'update'])->name('update');
+    Route::delete('/{task}', [AllTaskController::class, 'destroy'])->name('destroy');
+});
 
     // ⚠️ Setup route vẫn giữ, nhưng không còn các resource riêng nữa
     Route::get('/setup', [SetupController::class, 'index']);

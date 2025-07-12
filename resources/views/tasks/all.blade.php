@@ -1,10 +1,9 @@
 @extends('layouts.app')
-
 @section('content')
 <h1>Tất cả công việc</h1>
 
 <!-- Filter -->
-<form action="{{ route('tasks.all') }}" method="GET" class="row g-2 mb-3">
+<form action="{{ route('all.index') }}" method="GET" class="row g-2 mb-3">
     <div class="col-auto">
         <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}" placeholder="Từ ngày">
     </div>
@@ -13,11 +12,11 @@
     </div>
     <div class="col-auto">
         <button type="submit" class="btn btn-primary">Lọc</button>
-        <a href="{{ route('tasks.all') }}" class="btn btn-secondary">Xoá lọc</a>
+        <a href="{{ route('all.index') }}" class="btn btn-secondary">Xoá lọc</a>
     </div>
 </form>
 
-<a href="/tasks/create" class="btn btn-success mb-3">Thêm công việc</a>
+<a href="{{ route('all.create') }}" class="btn btn-success mb-3">Thêm công việc</a>
 
 <table class="table">
     <thead>
@@ -55,8 +54,8 @@
                 @endif
             </td>
             <td>
-                <a href="/tasks/{{ $task->id }}/edit" class="btn btn-warning btn-sm">Sửa</a>
-                <form action="/tasks/{{ $task->id }}" method="POST" style="display:inline;">
+                <a href="{{ route('all.edit', $task->id) }}" class="btn btn-warning btn-sm">Sửa</a>
+                <form action="{{ route('all.destroy', $task->id) }}" method="POST" style="display:inline;">
                     @csrf
                     @method('DELETE')
                     <button class="btn btn-danger btn-sm" onclick="return confirm('Xoá task này?')">Xoá</button>
@@ -67,6 +66,7 @@
     </tbody>
 </table>
 @endsection
+
 
 
 @section('scripts')
