@@ -3,7 +3,7 @@
 @section('content')
 <h1>Thêm công việc mới</h1>
 
-<form method="POST" action="{{ route('all.store') }}">
+<form method="POST" action="{{ route('all.store') }}"> 
     @csrf
     <input type="hidden" name="redirect_back" value="{{ route('all.index') }}">
 

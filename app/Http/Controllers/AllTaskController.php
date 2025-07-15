@@ -7,19 +7,19 @@ use Illuminate\Http\Request;
 
 class AllTaskController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request)//hiển thị danhsach
     {
         $query = Task::query();
         if ($request->filled('start_date')) $query->whereDate('task_date', '>=', $request->start_date);
         if ($request->filled('end_date')) $query->whereDate('task_date', '<=', $request->end_date);
 
         $tasks = $query->orderBy('task_date', 'desc')->get();
-        return view('tasks.all', compact('tasks'));
+        return view('tasks.all', compact('tasks')); //trả về danh sách tasks
     }
 
     public function create()
     {
-        return view('tasks.all_create');
+        return view('tasks.all_create'); 
     }
 
    public function store(Request $request)
@@ -49,13 +49,13 @@ class AllTaskController extends Controller
         \App\Models\Status::create(['status_name' => $request->status]);
     }
 
-    $data = $request->all();
+    $data = $request->all();  //lấy tất cả dữ liệu từ form
     $data['user_id'] = auth()->id(); // Nếu có user
 
-    Task::create($data);
+    Task::create($data); //tạo
 
-    $redirect = $request->redirect_back ?? route('all.index');
-    return redirect($redirect)->with('success', 'Đã thêm công việc vào danh sách tất cả!');
+    $redirect = $request->redirect_back ?? route('all.index'); //Xác định URL cần redirect về. có thì redirect về trang đó, không thì về all.index
+    return redirect($redirect)->with('success', 'Đã thêm công việc vào danh sách tất cả!'); //Redirect + Thông báo
 }
     public function edit(Task $task)
     {
