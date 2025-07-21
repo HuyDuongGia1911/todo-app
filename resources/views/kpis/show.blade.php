@@ -1,11 +1,11 @@
 @extends('layouts.app')
 @section('content')
-<h2>Chi tiết Deadline: {{ $deadline->name }}</h2>
+<h2>Chi tiết Deadline: {{ $kpi->name }}</h2>
 
 <ul>
-    <li><strong>Ngày bắt đầu:</strong> {{ $deadline->start_date }}</li>
-    <li><strong>Ngày đến hạn:</strong> {{ $deadline->end_date }}</li>
-    <li><strong>Ghi chú:</strong> {{ $deadline->note ?? '-' }}</li>
+    <li><strong>Ngày bắt đầu:</strong> {{ $kpi->start_date }}</li>
+    <li><strong>Ngày đến hạn:</strong> {{$kpi->end_date }}</li>
+    <li><strong>Ghi chú:</strong> {{$kpi->note ?? '-' }}</li>
 </ul>
 
 <h4>Công việc liên quan:</h4>

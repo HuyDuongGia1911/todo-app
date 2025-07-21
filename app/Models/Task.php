@@ -9,19 +9,19 @@ class Task extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'user_id',
-        'task_date',
-        'shift',
-        'type',
-        'title',
-        'supervisor',
-        'status',
-        'detail',
-        'progress',
-        'file_link',
-    ];
-   
+   protected $fillable = [
+    'user_id',
+    'task_date',
+    'shift',
+    'type',
+    'title',
+    'supervisor',
+    'status',
+    'priority', 
+    'progress',
+    'file_link',
+];
+
 public function shift()
 {
     return $this->belongsTo(Shift::class, 'shift');

@@ -4,28 +4,28 @@
 
 <h2>Sửa Deadline</h2>
 
-<form action="{{ route('deadlines.update', $deadline->id) }}" method="POST">
+<form action="{{ route('kpis.update', $kpi->id) }}" method="POST">
     @csrf
     @method('PUT')
 
     <div class="mb-3">
         <label class="form-label">Ngày bắt đầu</label>
-        <input type="date" name="start_date" class="form-control" value="{{ $deadline->start_date }}" required>
+        <input type="date" name="start_date" class="form-control" value="{{ $kpi->start_date }}" required>
     </div>
 
     <div class="mb-3">
         <label class="form-label">Ngày đến hạn</label>
-        <input type="date" name="end_date" class="form-control" value="{{ $deadline->end_date }}" required>
+        <input type="date" name="end_date" class="form-control" value="{{ $kpi->end_date }}" required>
     </div>
 
     <div class="mb-3">
         <label class="form-label">Tên Deadline</label>
-        <input type="text" name="name" class="form-control" value="{{ $deadline->name }}" required>
+        <input type="text" name="name" class="form-control" value="{{ $kpi->name }}" required>
     </div>
 
     <!-- Danh sách task -->
     <div id="task-list">
-        @foreach($deadline->tasks as $task)
+        @foreach($kpi->tasks as $task)
         <div class="task-item row mb-2">
             <div class="col">
                 <select name="task_titles[]" class="form-control select2" required>
@@ -51,7 +51,7 @@
 
     <div class="mb-3">
         <label class="form-label">Ghi chú</label>
-        <textarea name="note" class="form-control">{{ $deadline->note }}</textarea>
+        <textarea name="note" class="form-control">{{ $kpi->note }}</textarea>
     </div>
 
     <button class="btn btn-primary">Cập nhật Deadline</button>

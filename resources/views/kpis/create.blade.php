@@ -3,7 +3,7 @@
 @section('content')
 <h2>Thêm Deadline mới</h2>
 
-<form action="{{ route('deadlines.store') }}" method="POST">
+<form action="{{ route('kpis.store') }}" method="POST">
     @csrf
 
     <div class="mb-3">

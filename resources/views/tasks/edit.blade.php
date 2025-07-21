@@ -3,9 +3,10 @@
 @section('content')
 <h1>Sửa công việc</h1>
 
-<form method="POST" action="/tasks/{{ $task->id }}">
+<form method="POST" action="{{ route('tasks.update', $task->id) }}">
     @csrf
     @method('PUT')
+    <input type="hidden" name="redirect_back" value="{{ route('tasks.index') }}">
 
     <div class="mb-3">
         <label>Ngày:</label>
@@ -17,8 +18,7 @@
         ['name' => 'type', 'label' => 'Loại', 'api' => '/api/types', 'field' => 'type_name', 'title' => 'Quản lý Loại Task', 'value' => $task->type],
         ['name' => 'title', 'label' => 'Tên task', 'api' => '/api/titles', 'field' => 'title_name', 'title' => 'Quản lý Tên Task', 'value' => $task->title],
         ['name' => 'supervisor', 'label' => 'Người phụ trách', 'api' => '/api/supervisors', 'field' => 'supervisor_name', 'title' => 'Quản lý Người phụ trách', 'value' => $task->supervisor],
-        ['name' => 'status', 'label' => 'Trạng thái', 'api' => '/api/statuses', 'field' => 'status_name', 'title' => 'Quản lý Trạng thái', 'value' => $task->status],
-    ] as $dropdown)
+        ] as $dropdown)
         <div class="mb-3">
             <label>{{ $dropdown['label'] }}:</label>
             <div class="input-group">
@@ -39,6 +39,15 @@
             });
         </script>
     @endforeach
+<div class="mb-3">
+    <label>Mức độ ưu tiên:</label>
+    <select name="priority" class="form-control">
+        <option value="Khẩn cấp" {{ $task->priority === 'Khẩn cấp' ? 'selected' : '' }}>Khẩn cấp</option>
+        <option value="Cao" {{ $task->priority === 'Cao' ? 'selected' : '' }}>Cao</option>
+        <option value="Trung bình" {{ $task->priority === 'Trung bình' ? 'selected' : '' }}>Trung bình</option>
+        <option value="Thấp" {{ $task->priority === 'Thấp' ? 'selected' : '' }}>Thấp</option>
+    </select>
+</div>
 
     <div class="mb-3">
         <label>Tiến độ:</label>
@@ -88,15 +97,12 @@ function setupDropdown(selectId, apiUrl, fieldName, modalTitle, selectedValue = 
             const res = await fetch(apiUrl);
             const data = await res.json();
             select.empty();
-            data.forEach(item => {
-                select.append(new Option(item[fieldName], item[fieldName]));
-            });
+            data.forEach(item => select.append(new Option(item[fieldName], item[fieldName])));
             select.select2({ tags: true, placeholder: 'Chọn hoặc nhập...', width: '100%' });
 
             if (selectedValue) {
                 select.val(selectedValue).trigger('change');
             }
-
         } catch { alert('Lỗi khi load dữ liệu!'); }
     }
 

@@ -8,12 +8,20 @@ use Maatwebsite\Excel\Concerns\WithHeadings; //Chỉ ra rằng sẽ có tiêu đ
 
 class TasksExport implements FromCollection, WithHeadings
 {
-    public function collection()
+    protected $query;
+
+    // Constructor nhận query động
+    public function __construct($query)
     {
-        return Task::select('id', 'title', 'user_id', 'task_date', 'shift', 'type', 'supervisor', 'status', 'detail', 'progress', 'file_link', 'created_at', 'updated_at')->get();
+        $this->query = $query; // Lưu query để dùng trong collection()
     }
 
-        public function headings(): array
+    public function collection()
+    {
+        return $this->query->select('id', 'title', 'user_id', 'task_date', 'shift', 'type', 'supervisor', 'status', 'priority', 'detail', 'progress', 'file_link', 'created_at', 'updated_at')->get();
+    }
+
+    public function headings(): array
     {
         return [
             'ID',
@@ -24,6 +32,7 @@ class TasksExport implements FromCollection, WithHeadings
             'Type',
             'Supervisor',
             'Status',
+            'Priority',
             'Detail',
             'Progress',
             'File Link',

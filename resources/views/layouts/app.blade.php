@@ -38,12 +38,8 @@
         <h4 class="mb-4">📋 Menu</h4>
         <ul class="nav flex-column gap-2">
             <li class="nav-item"><a href="/dashboard" class="nav-link bg-primary text-white rounded px-3 py-2">🏠 Dashboard</a></li>
-            <li class="nav-item"><a href="/tasks" class="nav-link bg-success text-white rounded px-3 py-2">📅 Hôm nay có gì?</a></li>
-            <li class="nav-item"><a href="/plan" class="nav-link bg-warning text-dark rounded px-3 py-2">📝 Lên kế hoạch</a></li>
-           
-            <li class="nav-item"><a href="/all" class="nav-link bg-secondary text-white rounded px-3 py-2">📂 Tất cả công việc</a></li>
-            <li class="nav-item"><a href="/deadlines" class="nav-link bg-danger text-white rounded px-3 py-2">⏰ Deadline</a></li>
-            <li class="nav-item"><a href="/export" class="nav-link bg-dark text-white rounded px-3 py-2">📤 Xuất Excel</a></li>
+            <li class="nav-item"><a href="/tasks" class="nav-link bg-secondary text-white rounded px-3 py-2">📂 Tất cả công việc</a></li>
+            <li class="nav-item"><a href="/kpis" class="nav-link bg-danger text-white rounded px-3 py-2">⏰ KPI</a></li>
             <li class="nav-item mt-4"><a href="/logout" class="nav-link bg-danger bg-opacity-75 text-white rounded px-3 py-2">🚪 Logout</a></li>
         </ul>
     </div>

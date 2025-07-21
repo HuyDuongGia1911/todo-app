@@ -3,61 +3,39 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TaskController;
-use App\Http\Controllers\SetupController;
-use App\Http\Controllers\DeadlineController;
+use App\Http\Controllers\KPIController;
 use App\Http\Controllers\TaskExportController;
-use App\Http\Controllers\AllTaskController;
-// ========================================
-// ✔️ AUTH routes
-// ========================================
-Route::get('/', function () {
-    return redirect('/login');
-});
 
+// =============================
+// ✔️ AUTH routes
+// =============================
+Route::get('/', fn () => redirect('/login'));
 Route::get('/register', [AuthController::class, 'showRegister']);
 Route::post('/register', [AuthController::class, 'register']);
-
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/logout', [AuthController::class, 'logout']);
 
-// ========================================
-// ✔️ APP routes (phải login)
-// ========================================
+// =============================
+// ✔️ APP routes (đã đăng nhập)
+// =============================
 Route::middleware(['auth'])->group(function () {
 
-    // Dashboard & Task
-    Route::get('/dashboard', [TaskController::class, 'dashboard']);
-    Route::get('/tasks', [TaskController::class, 'index'])->name('tasks.index');
-    Route::get('/tasks/create', [TaskController::class, 'create']);
-    Route::post('/tasks', [TaskController::class, 'store']);
-    Route::get('/tasks/{task}/edit', [TaskController::class, 'edit']);
-    Route::put('/tasks/{task}', [TaskController::class, 'update']);
-    Route::delete('/tasks/{task}', [TaskController::class, 'destroy']);
+    //  Dashboard
+    Route::get('/dashboard', [TaskController::class, 'dashboard'])->name('dashboard');
 
-    // Các route phụ
-    Route::get('/plan', [TaskController::class, 'plan']);
-    Route::post('/plan', [TaskController::class, 'storePlan']);
-    Route::get('/deadline', [TaskController::class, 'deadline']);
-    Route::get('/export', [TaskController::class, 'export']);
-    Route::resource('deadlines', DeadlineController::class);
-    Route::get('/tasks/export', [TaskExportController::class, 'export'])->name('tasks.export');
-    Route::get('/export', [TaskExportController::class, 'showExport'])->name('export.index');
-    // Route nhóm cho 'all'
-    Route::prefix('all')->name('all.')->group(function() {
-    Route::get('/', [AllTaskController::class, 'index'])->name('index');
-    Route::get('/create', [AllTaskController::class, 'create'])->name('create');
-    Route::post('/', [AllTaskController::class, 'store'])->name('store');
-    Route::get('/{task}/edit', [AllTaskController::class, 'edit'])->name('edit');
-    Route::put('/{task}', [AllTaskController::class, 'update'])->name('update');
-    Route::delete('/{task}', [AllTaskController::class, 'destroy'])->name('destroy');
+    //  task crud (sau khi gộp controller)
+    Route::resource('tasks', TaskController::class)->except(['show']);
+    Route::get('/tasks/export', [TaskController::class, 'export'])->name('tasks.export');
+    //  kpi quản lý
+    Route::get('/kpis/export', [KPIController::class, 'export'])->name('kpis.export'); //lí do đặt trước là do resource che mất
+    Route::resource('kpis', KPIController::class);
+    //cap nha trang thai
+   Route::post('/tasks/{task}/status', [TaskController::class, 'updateStatus']);
+   Route::post('/kpis/{kpi}/status', [KPIController::class, 'updateStatus']);
+
+    
 });
-
-    // ⚠️ Setup route vẫn giữ, nhưng không còn các resource riêng nữa
-    Route::get('/setup', [SetupController::class, 'index']);
-    Route::post('/setup', [SetupController::class, 'store']);
-});
-
 
 use App\Http\Controllers\Api\ShiftApiController;
 use App\Http\Controllers\Api\TypeApiController;
