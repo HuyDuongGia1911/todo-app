@@ -37,21 +37,23 @@
     <tbody>
     @foreach($kpis as $kpi)
         @php
-            $totalTasks = $kpi->tasks->count();
-            $completedTasks = 0;
+    $totalActual = 0;
+    $totalTarget = 0;
 
-            foreach ($kpi->tasks as $kpiTask) {
-                $actual = \App\Models\Task::where('title', $kpiTask->task_title)
-                            ->whereBetween('task_date', [$kpi->start_date, $kpi->end_date])
-                            ->sum('progress');
+    foreach ($kpi->tasks as $kpiTask) {
+        $actual = \App\Models\Task::where('title', $kpiTask->task_title)
+                    ->whereBetween('task_date', [$kpi->start_date, $kpi->end_date])
+                    ->where('user_id', auth()->id()) // nếu bạn dùng đa người
+                    ->sum('progress');
 
-                if ($actual >= $kpiTask->target_progress) {
-                    $completedTasks++;
-                }
-            }
+        $target = $kpiTask->target_progress ?? 0;
 
-            $progressPercent = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100) : 0;
-        @endphp
+        $totalActual += $actual;
+        $totalTarget += $target;
+    }
+
+    $progressPercent = $totalTarget > 0 ? round($totalActual / $totalTarget * 100) : 0;
+@endphp
 
         <tr id="kpi-row-{{ $kpi->id }}" class="{{ $kpi->status === 'Đã hoàn thành' ? 'opacity-50' : '' }}">
             <td>{{ $kpi->start_date }}</td>
@@ -73,19 +75,22 @@
                 </form>
             </td>
             <td>
-                <label>
-                    <input type="radio" name="status_{{ $kpi->id }}" value="Chưa hoàn thành"
-                        onchange="updateKPIStatus({{ $kpi->id }}, 'Chưa hoàn thành')"
-                        {{ $kpi->status === 'Chưa hoàn thành' ? 'checked' : '' }}>
-                    Chưa hoàn thành
-                </label><br>
-                <label>
-                    <input type="radio" name="status_{{ $kpi->id }}" value="Đã hoàn thành"
-                        onchange="updateKPIStatus({{ $kpi->id }}, 'Đã hoàn thành')"
-                        {{ $kpi->status === 'Đã hoàn thành' ? 'checked' : '' }}>
-                    Đã hoàn thành
-                </label>
-            </td>
+    <div class="toggler">
+        <input id="kpi-toggle-{{ $kpi->id }}" type="checkbox"
+               onchange="updateKPIStatus({{ $kpi->id }}, this.checked ? 'Đã hoàn thành' : 'Chưa hoàn thành')"
+               {{ $kpi->status === 'Đã hoàn thành' ? 'checked' : '' }}>
+        <label for="kpi-toggle-{{ $kpi->id }}">
+            <svg class="toggler-on" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130.2 130.2">
+                <polyline class="path check" points="100.2,40.2 51.5,88.8 29.8,67.5"></polyline>
+            </svg>
+            <svg class="toggler-off" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130.2 130.2">
+                <line class="path line" x1="34.4" y1="34.4" x2="95.8" y2="95.8"></line>
+                <line class="path line" x1="95.8" y1="34.4" x2="34.4" y2="95.8"></line>
+            </svg>
+        </label>
+    </div>
+</td>
+
         </tr>
     @endforeach
     </tbody>
@@ -149,4 +154,89 @@ function updateKPIStatus(kpiId, statusValue) {
     .catch(() => alert('Lỗi khi cập nhật trạng thái KPI!'));
 }
 </script>
+<style>
+/* Switch toggle (Uiverse - mobinkakei) */
+.toggler {
+  width: 72px;
+  margin: auto;
+}
+
+.toggler input {
+  display: none;
+}
+
+.toggler label {
+  display: block;
+  position: relative;
+  width: 72px;
+  height: 36px;
+  border: 1px solid #d6d6d6;
+  border-radius: 36px;
+  background: #e4e8e8;
+  cursor: pointer;
+}
+
+.toggler label::after {
+  display: block;
+  position: absolute;
+  top: 50%;
+  left: 25%;
+  width: 26px;
+  height: 26px;
+  background-color: #d7062a;
+  content: '';
+  border-radius: 100%;
+  transform: translate(-50%, -50%);
+  transition: 0.25s ease-in-out;
+  animation: toggler-size 0.15s ease-out forwards;
+}
+
+.toggler input:checked + label::after {
+  background-color: #50ac5d;
+  left: 75%;
+  animation-name: toggler-size2;
+}
+
+.toggler label .toggler-on,
+.toggler label .toggler-off {
+  position: absolute;
+  top: 50%;
+  left: 25%;
+  width: 26px;
+  height: 26px;
+  transform: translate(-50%, -50%);
+  transition: all 0.15s ease-in-out;
+  z-index: 2;
+}
+
+.toggler .toggler-on,
+.toggler .toggler-off {
+  opacity: 1;
+}
+
+.toggler input:checked + label .toggler-off,
+.toggler input:not(:checked) + label .toggler-on {
+  width: 0;
+  height: 0;
+  opacity: 0;
+}
+
+.toggler .path {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 7px;
+  stroke-linecap: round;
+  stroke-miterlimit: 10;
+}
+
+@keyframes toggler-size {
+  0%, 100% { width: 26px; height: 26px; }
+  50% { width: 20px; height: 20px; }
+}
+
+@keyframes toggler-size2 {
+  0%, 100% { width: 26px; height: 26px; }
+  50% { width: 20px; height: 20px; }
+}
+</style>
 @endsection

@@ -12,13 +12,40 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Exports\TasksExport;
 use Maatwebsite\Excel\Facades\Excel;
+use Carbon\Carbon;
+use App\Models\Kpi;
 class TaskController extends Controller
 {
-    public function dashboard()
-    {
-        $taskCount = Task::where('user_id', Auth::id())->count();
-        return view('dashboard', compact('taskCount'));
-    }
+   public function dashboard()
+{
+    $today = Carbon::today();
+
+    $taskToday = Task::whereDate('task_date', $today)->count();
+
+    $taskOverdue = Task::where('task_date', '<', $today)
+        ->where('status', '!=', 'Đã hoàn thành')
+        ->count();
+
+    $weeklyTasks = Task::whereBetween('task_date', [
+        Carbon::now()->startOfWeek(),
+        Carbon::now()->endOfWeek()
+    ])->count();
+
+    $kpisSoon = Kpi::whereDate('end_date', '<=', $today->copy()->addDays(3))
+        ->where('status', '!=', 'Đã hoàn thành')
+        ->count();
+
+    return view('dashboard', [
+        'taskCount' => Task::count(),
+        'userName' => auth()->user()->name,
+        'dashboardData' => [
+            'taskToday' => $taskToday,
+            'taskOverdue' => $taskOverdue,
+            'weeklyTasks' => $weeklyTasks,
+            'kpisSoon' => $kpisSoon,
+        ]
+    ]);
+}
 
     public function index(Request $request)
     {

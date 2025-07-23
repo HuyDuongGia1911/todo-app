@@ -33,6 +33,8 @@ Route::middleware(['auth'])->group(function () {
     //cap nha trang thai
    Route::post('/tasks/{task}/status', [TaskController::class, 'updateStatus']);
    Route::post('/kpis/{kpi}/status', [KPIController::class, 'updateStatus']);
+   
+
 
     
 });
@@ -42,7 +44,7 @@ use App\Http\Controllers\Api\TypeApiController;
 use App\Http\Controllers\Api\TitleApiController;
 use App\Http\Controllers\Api\SupervisorApiController;
 use App\Http\Controllers\Api\StatusApiController;
-
+use App\Http\Controllers\Api\DashboardApiController;
 Route::prefix('api')->middleware('auth')->group(function () {
     Route::prefix('shifts')->group(function () {
         Route::get('/', [ShiftApiController::class, 'index']);
@@ -78,4 +80,11 @@ Route::prefix('api')->middleware('auth')->group(function () {
         Route::put('/{id}', [StatusApiController::class, 'update']);
         Route::delete('/{id}', [StatusApiController::class, 'destroy']);
     });
+  Route::get('/dashboard/tasks-by-day', [DashboardApiController::class, 'tasksByDay']);
+  Route::get('/dashboard/tasks-by-type', [DashboardApiController::class, 'tasksByType']);
+  Route::get('/dashboard/kpi-progress/{id}', [DashboardApiController::class, 'kpiProgress']);
+  Route::get('/kpis', function () {
+    return \App\Models\Kpi::select('id', 'name')->get();
+});
+   
 });

@@ -70,60 +70,30 @@
                     <button class="btn btn-danger btn-sm delete-btn" onclick="return confirm('Xoá task này?')" {{ $task->status === 'Đã hoàn thành' ? 'disabled' : '' }}>Xoá</button>
                 </form>
             </td>
-            <td>
-                <label>
-                    <input type="radio" name="status_{{ $task->id }}" value="Chưa hoàn thành"
-                           onchange="updateStatus({{ $task->id }}, 'Chưa hoàn thành')"
-                           {{ $task->status === 'Chưa hoàn thành' ? 'checked' : '' }}>
-                    Chưa hoàn thành
-                </label><br>
-                <label>
-                    <input type="radio" name="status_{{ $task->id }}" value="Đã hoàn thành"
-                           onchange="updateStatus({{ $task->id }}, 'Đã hoàn thành')"
-                           {{ $task->status === 'Đã hoàn thành' ? 'checked' : '' }}>
-                    Đã hoàn thành
-                </label>
-            </td>
+           <td>
+    <div class="toggler">
+        <input id="toggle-{{ $task->id }}" type="checkbox"
+               onchange="updateStatus({{ $task->id }}, this.checked ? 'Đã hoàn thành' : 'Chưa hoàn thành')"
+               {{ $task->status === 'Đã hoàn thành' ? 'checked' : '' }}>
+        <label for="toggle-{{ $task->id }}">
+            <svg class="toggler-on" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130.2 130.2">
+                <polyline class="path check" points="100.2,40.2 51.5,88.8 29.8,67.5"></polyline>
+            </svg>
+            <svg class="toggler-off" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130.2 130.2">
+                <line class="path line" x1="34.4" y1="34.4" x2="95.8" y2="95.8"></line>
+                <line class="path line" x1="95.8" y1="34.4" x2="34.4" y2="95.8"></line>
+            </svg>
+        </label>
+    </div>
+</td>
+
         </tr>
         @endforeach
     </tbody>
 </table>
 @endsection
 
-@section('scripts')
-<script>
-function updateStatus(taskId, statusValue) {
-    fetch(`/tasks/${taskId}/status`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-        },
-        body: JSON.stringify({ status: statusValue })
-    })
-    .then(res => {
-        if (!res.ok) throw new Error();
-        return res.json();
-    })
-    .then(() => {
-        const row = document.getElementById(`task-row-${taskId}`);
-        const editBtn = row.querySelector('.edit-btn');
-        const deleteBtn = row.querySelector('.delete-btn');
 
-        if (statusValue === 'Đã hoàn thành') {
-            row.classList.add('opacity-50');
-            editBtn.disabled = true;
-            deleteBtn.disabled = true;
-        } else {
-            row.classList.remove('opacity-50');
-            editBtn.disabled = false;
-            deleteBtn.disabled = false;
-        }
-    })
-    .catch(() => alert('Lỗi khi cập nhật trạng thái!'));
-}
-</script>
-@endsection
 
 
 
@@ -246,4 +216,90 @@ function updateStatus(taskId, statusValue) {
 }
 
 </script>
+<!-- CSS -->
+<style>
+/* Switch toggle (Uiverse - mobinkakei) */
+.toggler {
+  width: 72px;
+  margin: auto;
+}
+
+.toggler input {
+  display: none;
+}
+
+.toggler label {
+  display: block;
+  position: relative;
+  width: 72px;
+  height: 36px;
+  border: 1px solid #d6d6d6;
+  border-radius: 36px;
+  background: #e4e8e8;
+  cursor: pointer;
+}
+
+.toggler label::after {
+  display: block;
+  position: absolute;
+  top: 50%;
+  left: 25%;
+  width: 26px;
+  height: 26px;
+  background-color: #d7062a;
+  content: '';
+  border-radius: 100%;
+  transform: translate(-50%, -50%);
+  transition: 0.25s ease-in-out;
+  animation: toggler-size 0.15s ease-out forwards;
+}
+
+.toggler input:checked + label::after {
+  background-color: #50ac5d;
+  left: 75%;
+  animation-name: toggler-size2;
+}
+
+.toggler label .toggler-on,
+.toggler label .toggler-off {
+  position: absolute;
+  top: 50%;
+  left: 25%;
+  width: 26px;
+  height: 26px;
+  transform: translate(-50%, -50%);
+  transition: all 0.15s ease-in-out;
+  z-index: 2;
+}
+
+.toggler .toggler-on,
+.toggler .toggler-off {
+  opacity: 1;
+}
+
+.toggler input:checked + label .toggler-off,
+.toggler input:not(:checked) + label .toggler-on {
+  width: 0;
+  height: 0;
+  opacity: 0;
+}
+
+.toggler .path {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 7px;
+  stroke-linecap: round;
+  stroke-miterlimit: 10;
+}
+
+@keyframes toggler-size {
+  0%, 100% { width: 26px; height: 26px; }
+  50% { width: 20px; height: 20px; }
+}
+
+@keyframes toggler-size2 {
+  0%, 100% { width: 26px; height: 26px; }
+  50% { width: 20px; height: 20px; }
+}
+</style>
 @endsection

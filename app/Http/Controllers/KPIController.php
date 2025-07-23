@@ -11,19 +11,43 @@ use Maatwebsite\Excel\Facades\Excel;
 class KPIController extends Controller
 {
     public function index(Request $request)
-    {
-        $query = KPI::query();
+{
+    $query = KPI::query();
 
-        if ($request->filled('start_date')) {
-            $query->whereDate('start_date', '>=', $request->start_date);
-        }
-        if ($request->filled('end_date')) {
-            $query->whereDate('end_date', '<=', $request->end_date);
-        }
-
-        $kpis = $query->orderBy('end_date')->get();
-        return view('kpis.index', compact('kpis'));
+    if ($request->filled('start_date')) {
+        $query->whereDate('start_date', '>=', $request->start_date);
     }
+    if ($request->filled('end_date')) {
+        $query->whereDate('end_date', '<=', $request->end_date);
+    }
+
+    $kpis = $query->orderBy('end_date')->get();
+
+    // Tính tiến độ thực tế cho mỗi KPI
+    foreach ($kpis as $kpi) {
+        $start = min($kpi->start_date, $kpi->end_date);
+        $end = max($kpi->start_date, $kpi->end_date);
+        $userId = auth()->id();
+
+        $totalActual = 0;
+        $totalTarget = 0;
+
+        foreach ($kpi->tasks as $task) {
+            $actual = Task::where('title', $task->task_title)
+                ->whereBetween('task_date', [$start, $end])
+                ->where('user_id', $userId)
+                ->sum('progress');
+
+            $totalActual += $actual;
+            $totalTarget += $task->target_progress ?? 0;
+        }
+
+        $kpi->calculated_progress = $totalTarget > 0 ? round($totalActual / $totalTarget * 100) : 0;
+    }
+
+    return view('kpis.index', compact('kpis'));
+}
+
 
     public function create()
     {
@@ -58,25 +82,42 @@ class KPIController extends Controller
     }
 
     public function show(KPI $kpi)
-    {
-        $tasks = [];
-        $start = min($kpi->start_date, $kpi->end_date);
-        $end = max($kpi->start_date, $kpi->end_date);
+{
+    $start = min($kpi->start_date, $kpi->end_date);
+    $end = max($kpi->start_date, $kpi->end_date);
+    $userId = auth()->id();
 
-        foreach ($kpi->tasks as $dlTask) {
-            $actual = Task::where('title', $dlTask->task_title)
-                          ->whereBetween('task_date', [$start, $end])
-                          ->sum('progress');
+    $tasksData = [];
+    $totalActual = 0;
+    $totalTarget = 0;
 
-            $tasks[] = [
-                'title' => $dlTask->task_title,
-                'target' => $dlTask->target_progress,
-                'actual' => $actual,
-            ];
-        }
+    foreach ($kpi->tasks as $kpiTask) {
+        $actualProgress = Task::where('title', $kpiTask->task_title)
+            ->whereBetween('task_date', [$start, $end])
+            ->where('user_id', $userId)
+            ->sum('progress');
 
-        return view('kpis.show', compact('kpi', 'tasks'));
+        $target = $kpiTask->target_progress ?: 0;
+
+        $tasksData[] = [
+            'title' => $kpiTask->task_title,
+            'actual' => $actualProgress,
+            'target' => $target,
+        ];
+
+        $totalActual += $actualProgress;
+        $totalTarget += $target;
     }
+
+    $overallProgress = $totalTarget > 0 ? round($totalActual / $totalTarget * 100) : 0;
+
+    return view('kpis.show', [
+        'kpi' => $kpi,
+        'tasks' => $tasksData,
+        'overallProgress' => $overallProgress,
+    ]);
+}
+
 
     public function edit(KPI $kpi)
     {
