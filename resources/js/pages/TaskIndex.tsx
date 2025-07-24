@@ -35,6 +35,8 @@ export default function TaskIndex({ tasks }: Props) {
   const [taskDateEnd, setTaskDateEnd] = useState('');
   const [createdStart, setCreatedStart] = useState('');
   const [createdEnd, setCreatedEnd] = useState('');
+  const [showFilters, setShowFilters] = useState(true);
+
   const itemsPerPage = 10;
 
   const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
@@ -43,28 +45,28 @@ export default function TaskIndex({ tasks }: Props) {
     setCurrentPage(1);
   }, [tab, priorityFilter, taskDateStart, taskDateEnd, createdStart, createdEnd]);
   const getCurrentDayInfo = () => {
-  const today = new Date();
-  const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
-  const weekday = days[today.getDay()];
-  const date = today.toLocaleDateString('vi-VN');
+    const today = new Date();
+    const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+    const weekday = days[today.getDay()];
+    const date = today.toLocaleDateString('vi-VN');
 
-  const hour = today.getHours();
-  let session = '';
-  let Icon = Sun; // default
+    const hour = today.getHours();
+    let session = '';
+    let Icon = Sun; // default
 
-  if (hour < 12) {
-    session = 'Sáng';
-    Icon = Sunrise;
-  } else if (hour < 18) {
-    session = 'Chiều';
-    Icon = Sun;
-  } else {
-    session = 'Tối';
-    Icon = Moon;
-  }
+    if (hour < 12) {
+      session = 'Sáng';
+      Icon = Sunrise;
+    } else if (hour < 18) {
+      session = 'Chiều';
+      Icon = Sun;
+    } else {
+      session = 'Tối';
+      Icon = Moon;
+    }
 
-  return { weekday, date, session, Icon };
-};
+    return { weekday, date, session, Icon };
+  };
 
   const applyFilters = (): Task[] => {
     const today = new Date();
@@ -206,7 +208,7 @@ export default function TaskIndex({ tasks }: Props) {
   };
 
   return (
-<div className="position-relative" style={{ minHeight: '100vh' }}>
+    <div className="position-relative" style={{ minHeight: '100vh' }}>
       {editingTask && (
         <SidebarEditTask
           task={editingTask}
@@ -215,7 +217,7 @@ export default function TaskIndex({ tasks }: Props) {
         />
       )}
 
-      <div className="main-content-wrapper" style={{ marginRight: editingTask ? '360px' : '0', transition: 'margin-right 0.3s ease',  overflowX: 'hidden' }}>
+      <div className="main-content-wrapper" style={{ marginRight: editingTask ? '360px' : '0', transition: 'margin-right 0.3s ease', overflowX: 'hidden' }}>
         <style>{`
           .switch {
             position: relative; height: 1.5rem; width: 3rem; cursor: pointer;
@@ -237,95 +239,115 @@ export default function TaskIndex({ tasks }: Props) {
 
 
 
-       <div className="mb-3 p-3 bg-white rounded shadow">
-  {/* Tab lọc trạng thái */}
-  <div className="d-flex flex-wrap mb-3">
-    {['all', 'done', 'pending', 'overdue'].map(t => (
-      <button
-        key={t}
-        className={`btn me-2 mb-2 ${tab === t ? 'btn-primary' : 'btn-outline-primary'} btn-sm`}
-        onClick={() => setTab(t as 'all' | 'done' | 'pending' | 'overdue')}
-      >
-        {{ all: 'Tất cả', done: 'Đã hoàn thành', pending: 'Chưa hoàn thành', overdue: 'Quá hạn' }[t]}
-      </button>
-    ))}
-  </div>
+        <div className="mb-3 p-3 bg-white rounded shadow">
+          {/* Header: Tab + Toggle icon */}
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            {/* Tab lọc trạng thái */}
+            <div className="d-flex flex-wrap">
+              {['all', 'done', 'pending', 'overdue'].map(t => (
+                <button
+                  key={t}
+                  className={`btn me-2 mb-2 ${tab === t ? 'btn-primary' : 'btn-outline-primary'} btn-sm`}
+                  onClick={() => setTab(t as 'all' | 'done' | 'pending' | 'overdue')}
+                >
+                  {{ all: 'Tất cả', done: 'Đã hoàn thành', pending: 'Chưa hoàn thành', overdue: 'Quá hạn' }[t]}
+                </button>
+              ))}
+            </div>
 
-  {/* Bộ lọc nâng cao: độ ưu tiên + khoảng ngày */}
-  <div className="row g-3 mb-3">
-    <div className="col-md-3">
-      <label className="form-label">Độ ưu tiên</label>
-      <Select
-        isClearable
-        value={priorityFilter}
-        onChange={setPriorityFilter}
-        options={['Khẩn cấp', 'Cao', 'Trung bình', 'Thấp'].map(p => ({ value: p, label: p }))}
-        placeholder="Chọn độ ưu tiên"
-      />
-    </div>
+            {/* Mũi tên toggle */}
+            <button
+              className="btn btn-sm btn-light d-flex align-items-center"
+              onClick={() => setShowFilters(prev => !prev)}
+              title={showFilters ? 'Ẩn bộ lọc' : 'Hiện bộ lọc'}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16" height="16" fill="currentColor"
+                viewBox="0 0 16 16"
+                style={{ transform: showFilters ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}
+              >
+                <path fillRule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" />
+              </svg>
+            </button>
+          </div>
 
-    <div className="col-md-3">
-      <label className="form-label">Ngày công việc (Từ)</label>
-      <input
-        type="date"
-        className="form-control"
-        value={taskDateStart}
-        onChange={e => setTaskDateStart(e.target.value)}
-      />
-    </div>
+          {/* Bộ lọc nâng cao: chỉ hiện khi showFilters = true */}
+          {showFilters && (
+            <>
+              <div className="row g-3 mb-3">
+                <div className="col-md-3">
+                  <label className="form-label">Độ ưu tiên</label>
+                  <Select
+                    isClearable
+                    value={priorityFilter}
+                    onChange={setPriorityFilter}
+                    options={['Khẩn cấp', 'Cao', 'Trung bình', 'Thấp'].map(p => ({ value: p, label: p }))}
+                    placeholder="Chọn độ ưu tiên"
+                  />
+                </div>
 
-    <div className="col-md-3">
-      <label className="form-label">Ngày công việc (Đến)</label>
-      <input
-        type="date"
-        className="form-control"
-        value={taskDateEnd}
-        onChange={e => setTaskDateEnd(e.target.value)}
-      />
-    </div>
-  </div>
+                <div className="col-md-3">
+                  <label className="form-label">Ngày công việc (Từ)</label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={taskDateStart}
+                    onChange={e => setTaskDateStart(e.target.value)}
+                  />
+                </div>
 
-  {/* Nút xuất và reset */}
-  <div className="d-flex flex-wrap justify-content-between align-items-center mt-3">
-      {/* SVG + thời gian */}
-      <div className="d-flex align-items-center text-muted mb-2">
-        <Icon size={20} className="me-2" />
-        <span className="fw-semibold">{session}, {weekday} {date}</span>
-      </div>
+                <div className="col-md-3">
+                  <label className="form-label">Ngày công việc (Đến)</label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={taskDateEnd}
+                    onChange={e => setTaskDateEnd(e.target.value)}
+                  />
+                </div>
+              </div>
 
-      {/* Nút xuất/reset */}
-      <div className="d-flex flex-wrap justify-content-end">
-        <a
-          href="/tasks/export?type=all"
-          className="btn btn-outline-dark btn-sm me-2 mb-2"
-        >
-          Xuất tất cả
-        </a>
-        <a
-          href={buildExportUrl('filtered')}
-          className="btn btn-success btn-sm me-2 mb-2"
-          download
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Xuất bảng hiện tại
-        </a>
-        <button
-          className="btn btn-outline-secondary btn-sm mb-2"
-          onClick={resetFilters}
-        >
-          Reset bộ lọc
-        </button>
-      </div>
-  </div>
-</div>
+              <div className="d-flex flex-wrap justify-content-between align-items-center mt-3">
+                <div className="d-flex align-items-center text-muted mb-2">
+                  <Icon size={20} className="me-2" />
+                  <span className="fw-semibold">{session}, {weekday} {date}</span>
+                </div>
+
+                <div className="d-flex flex-wrap justify-content-end">
+                  <a
+                    href="/tasks/export?type=all"
+                    className="btn btn-outline-dark btn-sm me-2 mb-2"
+                  >
+                    Xuất tất cả
+                  </a>
+                  <a
+                    href={buildExportUrl('filtered')}
+                    className="btn btn-success btn-sm me-2 mb-2"
+                    download
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Xuất bảng hiện tại
+                  </a>
+                  <button
+                    className="btn btn-outline-secondary btn-sm mb-2"
+                    onClick={resetFilters}
+                  >
+                    Reset bộ lọc
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
 
 
 
 
 
-         
-         <div className="d-flex mb-3">
+
+        <div className="d-flex mb-3">
           <input type="text" className="form-control me-2" placeholder="Thêm công việc mới..."
             value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleQuickAdd()} />
@@ -379,6 +401,6 @@ export default function TaskIndex({ tasks }: Props) {
           </div>
         </div>
       </div>
-  </div>
+    </div>
   );
 }

@@ -84,11 +84,24 @@ export default function SidebarEditTask({ task, onClose, onSave }) {
           <input type="date" className="form-control" name="task_date" value={form.task_date || ''} onChange={handleChange} />
         </div>
 
-         <AsyncDropdownSelect label="Ca" name="shift" field="shift_name" api="/api/shifts" value={form.shift} onChange={handleChange} />
-<AsyncDropdownSelect label="Loại" name="type" field="type_name" api="/api/types" value={form.type} onChange={handleChange} />
-<AsyncDropdownSelect label="Tên task" name="title" field="title_name" api="/api/titles" value={form.title} onChange={handleChange} />
-<AsyncDropdownSelect label="Người phụ trách" name="supervisor" field="supervisor_name" api="/api/supervisors" value={form.supervisor} onChange={handleChange} />
+<AsyncDropdownSelect
+          label="Ca" name="shift" field="shift_name" api="/api/shifts"
+          value={form.shift} onChange={handleChange} creatable
+        />
+        <AsyncDropdownSelect
+          label="Loại" name="type" field="type_name" api="/api/types"
+          value={form.type} onChange={handleChange} creatable
+        />
+        <AsyncDropdownSelect
+          label="Tên task" name="title" field="title_name" api="/api/titles"
+          value={form.title} onChange={handleChange} creatable
+        />
+        <AsyncDropdownSelect
+          label="Người phụ trách" name="supervisor" field="supervisor_name" api="/api/supervisors"
+          value={form.supervisor} onChange={handleChange} creatable
+        />
 
+          {/* Mức độ ưu tiên: KHÔNG CHO THÊM MỚI */}
         <div className="mb-2">
           <label className="form-label">Mức độ ưu tiên</label>
           <select name="priority" className="form-select" value={form.priority || ''} onChange={handleChange}>

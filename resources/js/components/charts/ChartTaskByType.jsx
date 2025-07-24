@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-const COLORS = ['#0d6efd', '#dc3545', '#ffc107', '#20c997', '#6f42c1'];
+const getRandomColor = () =>
+  `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`;
 
 export default function ChartTaskByType() {
   const [data, setData] = useState([]);
@@ -9,13 +10,20 @@ export default function ChartTaskByType() {
   useEffect(() => {
     fetch('/api/dashboard/tasks-by-type')
       .then(res => res.json())
-      .then(setData)
+      .then(rawData => {
+        const normalized = rawData.map(item => ({
+          ...item,
+          type: item.type && item.type.trim() !== '' ? item.type : 'Không rõ',
+          color: getRandomColor()
+        }));
+        setData(normalized);
+      })
       .catch(() => alert('Lỗi tải dữ liệu loại task!'));
   }, []);
 
   return (
     <div className="mt-4">
-      <h5 className="mb-3"> Phân loại công việc</h5>
+      <h5 className="mb-3">Phân loại công việc</h5>
       <ResponsiveContainer width="100%" height={300}>
         <PieChart>
           <Pie
@@ -28,7 +36,7 @@ export default function ChartTaskByType() {
             label
           >
             {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              <Cell key={`cell-${index}`} fill={entry.color} />
             ))}
           </Pie>
           <Tooltip formatter={(value) => [`${value}`, 'Số lượng']} />
