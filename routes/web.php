@@ -33,7 +33,9 @@ Route::middleware(['auth'])->group(function () {
     //cap nha trang thai
    Route::post('/tasks/{task}/status', [TaskController::class, 'updateStatus']);
    Route::post('/kpis/{kpi}/status', [KPIController::class, 'updateStatus']);
-   
+   //them nhanh
+     Route::post('/tasks/quick-add', [TaskController::class, 'quickAdd'])->name('tasks.quick-add');
+
 
 
     
@@ -86,5 +88,7 @@ Route::prefix('api')->middleware('auth')->group(function () {
   Route::get('/kpis', function () {
     return \App\Models\Kpi::select('id', 'name')->get();
 });
+   
+
    
 });

@@ -36,6 +36,7 @@ class KPIController extends Controller
             $actual = Task::where('title', $task->task_title)
                 ->whereBetween('task_date', [$start, $end])
                 ->where('user_id', $userId)
+                ->where('status', 'Đã hoàn thành')
                 ->sum('progress');
 
             $totalActual += $actual;

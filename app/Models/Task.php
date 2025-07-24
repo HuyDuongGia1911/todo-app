@@ -19,6 +19,7 @@ class Task extends Model
     'status',
     'priority', 
     'progress',
+    'detail',
     'file_link',
 ];
 

@@ -1,7 +1,7 @@
 import React from 'react';
-import ChartTaskByDay from './charts/ChartTaskByDay';
-import ChartTaskByType from './charts/ChartTaskByType';
-import ChartKpiProgress from './charts/ChartKpiProgress';
+import ChartTaskByDay from '../components/charts/ChartTaskByDay';
+import ChartTaskByType from '../components/charts/ChartTaskByType';
+import ChartKpiProgress from '../components/charts/ChartKpiProgress';
 export default function Dashboard({ userName, taskCount, dashboardData }) {
   return (
     <div className="bg-white p-4 rounded shadow">

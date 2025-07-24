@@ -36,62 +36,44 @@
     </thead>
     <tbody>
     @foreach($kpis as $kpi)
-        @php
-    $totalActual = 0;
-    $totalTarget = 0;
-
-    foreach ($kpi->tasks as $kpiTask) {
-        $actual = \App\Models\Task::where('title', $kpiTask->task_title)
-                    ->whereBetween('task_date', [$kpi->start_date, $kpi->end_date])
-                    ->where('user_id', auth()->id()) // nếu bạn dùng đa người
-                    ->sum('progress');
-
-        $target = $kpiTask->target_progress ?? 0;
-
-        $totalActual += $actual;
-        $totalTarget += $target;
-    }
-
-    $progressPercent = $totalTarget > 0 ? round($totalActual / $totalTarget * 100) : 0;
-@endphp
-
-        <tr id="kpi-row-{{ $kpi->id }}" class="{{ $kpi->status === 'Đã hoàn thành' ? 'opacity-50' : '' }}">
-            <td>{{ $kpi->start_date }}</td>
-            <td>{{ $kpi->end_date }}</td>
-            <td>{{ $kpi->name }}</td>
-            <td>{{ $progressPercent }}%</td>
-            <td>
-                <a href="{{ route('kpis.show', $kpi->id) }}" class="btn btn-primary btn-sm">Chi tiết</a>
-            </td>
-            <td>
-               <form action="{{ route('kpis.edit', $kpi->id) }}" method="GET" style="display:inline;">
-    <button type="submit" class="btn btn-warning btn-sm edit-btn" {{ $kpi->status === 'Đã hoàn thành' ? 'disabled' : '' }}>
-        Sửa
-    </button>
-</form>
-                <form action="{{ route('kpis.destroy', $kpi->id) }}" method="POST" style="display:inline;">
-                    @csrf @method('DELETE')
-                    <button class="btn btn-danger btn-sm delete-btn" onclick="return confirm('Xoá deadline này?')" {{ $kpi->status === 'Đã hoàn thành' ? 'disabled' : '' }}>Xoá</button>
-                </form>
-            </td>
-            <td>
-    <div class="toggler">
-        <input id="kpi-toggle-{{ $kpi->id }}" type="checkbox"
-               onchange="updateKPIStatus({{ $kpi->id }}, this.checked ? 'Đã hoàn thành' : 'Chưa hoàn thành')"
-               {{ $kpi->status === 'Đã hoàn thành' ? 'checked' : '' }}>
-        <label for="kpi-toggle-{{ $kpi->id }}">
-            <svg class="toggler-on" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130.2 130.2">
-                <polyline class="path check" points="100.2,40.2 51.5,88.8 29.8,67.5"></polyline>
-            </svg>
-            <svg class="toggler-off" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130.2 130.2">
-                <line class="path line" x1="34.4" y1="34.4" x2="95.8" y2="95.8"></line>
-                <line class="path line" x1="95.8" y1="34.4" x2="34.4" y2="95.8"></line>
-            </svg>
-        </label>
-    </div>
-</td>
-
-        </tr>
+      <tr id="kpi-row-{{ $kpi->id }}" class="{{ $kpi->status === 'Đã hoàn thành' ? 'opacity-50' : '' }}">
+    <td>{{ $kpi->start_date }}</td>
+    <td>{{ $kpi->end_date }}</td>
+    <td>{{ $kpi->name }}</td>
+    <td>{{ $kpi->calculated_progress }}%</td> {{-- ✅ Chỉ hiển thị đã tính trong Controller --}}
+    <td>
+        <a href="{{ route('kpis.show', $kpi->id) }}" class="btn btn-primary btn-sm">Chi tiết</a>
+    </td>
+    <td>
+        <form action="{{ route('kpis.edit', $kpi->id) }}" method="GET" style="display:inline;">
+            <button type="submit" class="btn btn-warning btn-sm edit-btn" {{ $kpi->status === 'Đã hoàn thành' ? 'disabled' : '' }}>
+                Sửa
+            </button>
+        </form>
+        <form action="{{ route('kpis.destroy', $kpi->id) }}" method="POST" style="display:inline;">
+            @csrf @method('DELETE')
+            <button class="btn btn-danger btn-sm delete-btn" onclick="return confirm('Xoá deadline này?')" {{ $kpi->status === 'Đã hoàn thành' ? 'disabled' : '' }}>
+                Xoá
+            </button>
+        </form>
+    </td>
+    <td>
+        <div class="toggler">
+            <input id="kpi-toggle-{{ $kpi->id }}" type="checkbox"
+                onchange="updateKPIStatus({{ $kpi->id }}, this.checked ? 'Đã hoàn thành' : 'Chưa hoàn thành')"
+                {{ $kpi->status === 'Đã hoàn thành' ? 'checked' : '' }}>
+            <label for="kpi-toggle-{{ $kpi->id }}">
+                <svg class="toggler-on" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130.2 130.2">
+                    <polyline class="path check" points="100.2,40.2 51.5,88.8 29.8,67.5"></polyline>
+                </svg>
+                <svg class="toggler-off" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130.2 130.2">
+                    <line class="path line" x1="34.4" y1="34.4" x2="95.8" y2="95.8"></line>
+                    <line class="path line" x1="95.8" y1="34.4" x2="34.4" y2="95.8"></line>
+                </svg>
+            </label>
+        </div>
+    </td>
+</tr>
     @endforeach
     </tbody>
 </table>
