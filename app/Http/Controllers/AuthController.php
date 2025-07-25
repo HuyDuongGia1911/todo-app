@@ -47,7 +47,7 @@ public function login(Request $request) {
          if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
            
 
-            return redirect('/dashboard')->with('success', 'Login successful');
+            return redirect('/dashboard')->with('success');
     }
 
         return back()->with('error', 'Lỗi');

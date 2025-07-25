@@ -13,6 +13,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.jsx'])
 
     <style>
+        
         body {
             background-color: #f8f9fa;
         }
@@ -72,7 +73,7 @@
     </style>
     <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
-
+@stack('scripts')
 <body>
     <div class="d-flex min-vh-100">
         <!-- Sidebar -->
@@ -87,19 +88,44 @@
             </div>
 
             <ul class="nav nav-pills flex-column gap-2">
-                <li><a href="/dashboard" class="nav-link {{ request()->is('dashboard') ? 'active' : '' }}">
-                        <i class="bi bi-house-door-fill menu-icon"></i> Trang chủ
-                    </a></li>
-                <li><a href="/tasks" class="nav-link {{ request()->is('tasks*') ? 'active' : '' }}">
-                        <i class="bi bi-journal-text menu-icon"></i> Công việc
-                    </a></li>
-                <li><a href="/kpis" class="nav-link {{ request()->is('kpis*') ? 'active' : '' }}">
-                        <i class="bi bi-speedometer2 menu-icon"></i> KPI
-                    </a></li>
-                <li class="mt-4"><a href="/logout" class="nav-link text-danger">
-                        <i class="bi bi-box-arrow-right menu-icon"></i> Logout
-                    </a></li>
-            </ul>
+    <li>
+        <a href="/dashboard" class="nav-link {{ request()->is('dashboard') ? 'active' : '' }}">
+            <i class="bi bi-house-door-fill menu-icon"></i> Trang chủ
+        </a>
+    </li>
+    <li>
+        <a href="/tasks" class="nav-link {{ request()->is('tasks*') ? 'active' : '' }}">
+            <i class="bi bi-journal-text menu-icon"></i> Công việc
+        </a>
+    </li>
+    <li>
+        <a href="/kpis" class="nav-link {{ request()->is('kpis*') ? 'active' : '' }}">
+            <i class="bi bi-speedometer2 menu-icon"></i> KPI
+        </a>
+    </li>
+    <li>
+        <a href="/summaries" class="nav-link {{ request()->is('summaries*') ? 'active' : '' }}">
+            <i class="bi bi-clipboard-check"></i> Báo cáo
+        </a>
+    </li>
+
+    {{-- Hiển thị riêng cho admin --}}
+   @auth
+    @if(Auth::user()->is_admin)
+        <li><a href="{{ route('management') }}" class="nav-link {{ request()->is('management') ? 'active' : '' }}">
+            <i class="bi bi-gear-fill menu-icon"></i> Quản lý
+        </a></li>
+    @endif
+@endauth
+
+
+    <li class="mt-4">
+        <a href="/logout" class="nav-link text-danger">
+            <i class="bi bi-box-arrow-right menu-icon"></i> Logout
+        </a>
+    </li>
+</ul>
+
         </div>
 
         <!-- Content -->

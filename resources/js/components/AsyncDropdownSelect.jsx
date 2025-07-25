@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import Select from "react-select";
 import CreatableSelect from "react-select/creatable";
 import { FaEdit, FaTrash } from "react-icons/fa";
-
+import Swal from "sweetalert2";
 export default function AsyncDropdownSelect({
   label,
   name,
@@ -72,7 +72,17 @@ export default function AsyncDropdownSelect({
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Bạn chắc chắn xoá?")) return;
+    const result = await Swal.fire({
+      title: "Bạn có chắc chắn muốn xoá?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Xoá",
+      cancelButtonText: "Huỷ",
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       const res = await fetch(`${api}/${id}`, {
@@ -83,18 +93,24 @@ export default function AsyncDropdownSelect({
         },
       });
 
-      if (!res.ok) throw new Error("Xoá thất bại");
+      if (!res.ok) throw new Error();
 
       setOptions((prev) => prev.filter((o) => o.id !== id));
-       onChange({
-      target: {
-        name,
-        value: "",
-      },
-    });
-    } catch (err) {
-      console.error("Error:", err);
-      alert("Xoá thất bại");
+      onChange({ target: { name, value: "" } });
+
+      await Swal.fire({
+        icon: "success",
+        title: "Đã xoá!",
+        text: "Mục đã được xoá thành công.",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch {
+      await Swal.fire({
+        icon: "error",
+        title: "Lỗi!",
+        text: "Xoá thất bại!",
+      });
     }
   };
 

@@ -170,16 +170,23 @@ public function export(Request $request)
     if ($type === 'filtered') {
         // Lọc theo trạng thái tab
         if ($request->filled('status_tab')) {
+            $today = now()->toDateString();
+
             switch ($request->status_tab) {
                 case 'done':
                     $query->where('status', 'Đã hoàn thành');
                     break;
+
                 case 'pending':
-                    $query->where('status', 'Chưa hoàn thành');
-                    break;
-                case 'overdue':
+                    // Chưa hoàn thành và chưa quá hạn (ngày >= hôm nay)
                     $query->where('status', 'Chưa hoàn thành')
-                          ->whereDate('task_date', '<', now()->toDateString());
+                          ->whereDate('task_date', '>=', $today);
+                    break;
+
+                case 'overdue':
+                    // Chưa hoàn thành nhưng đã quá hạn (ngày < hôm nay)
+                    $query->where('status', 'Chưa hoàn thành')
+                          ->whereDate('task_date', '<', $today);
                     break;
             }
         }

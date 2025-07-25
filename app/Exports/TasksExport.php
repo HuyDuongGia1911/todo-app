@@ -8,7 +8,7 @@ use Maatwebsite\Excel\Concerns\WithHeadings; //Chỉ ra rằng sẽ có tiêu đ
 
 class TasksExport implements FromCollection, WithHeadings
 {
-    protected $query;
+    protected $query; //biến để lưu query để áp filter
 
     // Constructor nhận query động
     public function __construct($query)
@@ -16,12 +16,12 @@ class TasksExport implements FromCollection, WithHeadings
         $this->query = $query; // Lưu query để dùng trong collection()
     }
 
-    public function collection()
+    public function collection() //Lấy dữ liệu từ query với các cột cụ thể.
     {
-        return $this->query->select('id', 'title', 'user_id', 'task_date', 'shift', 'type', 'supervisor', 'status', 'priority', 'detail', 'progress', 'file_link', 'created_at', 'updated_at')->get();
+        return $this->query->select('id', 'title', 'user_id', 'task_date', 'shift', 'type', 'supervisor', 'status', 'priority', 'detail', 'progress', 'file_link', 'created_at', 'updated_at')->get();//select() giới hạn cột
     }
 
-    public function headings(): array
+    public function headings(): array //header row cho file excel
     {
         return [
             'ID',

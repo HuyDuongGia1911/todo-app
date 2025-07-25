@@ -5,7 +5,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\KPIController;
 use App\Http\Controllers\TaskExportController;
-
+use App\Http\Controllers\MonthlySummaryController;
+use App\Http\Controllers\Admin\UserController;
 // =============================
 // ✔️ AUTH routes
 // =============================
@@ -35,6 +36,30 @@ Route::middleware(['auth'])->group(function () {
    Route::post('/kpis/{kpi}/status', [KPIController::class, 'updateStatus']);
    //them nhanh
      Route::post('/tasks/quick-add', [TaskController::class, 'quickAdd'])->name('tasks.quick-add');
+     //tong ket
+    Route::get('/summaries', [MonthlySummaryController::class, 'index']);
+    Route::get('/summaries/{summary}', [MonthlySummaryController::class, 'show']);
+    Route::post('/summaries', [MonthlySummaryController::class, 'store']);
+    Route::put('/summaries/{summary}', [MonthlySummaryController::class, 'update']);
+    Route::delete('/summaries/{summary}', [MonthlySummaryController::class, 'destroy']);
+    Route::post('/summaries/{summary}/lock', [MonthlySummaryController::class, 'lock']);
+    Route::post('/summaries/{summary}/regenerate', [MonthlySummaryController::class, 'regenerate']);
+    Route::get('/summaries/{summary}/export', [MonthlySummaryController::class, 'exportById']);
+
+    //admin
+Route::middleware(['auth', 'is_admin'])->group(function () {
+    Route::get('/management', fn () => view('management.index'))->name('management');
+
+    Route::get('/management/users', [UserController::class, 'index']);
+    Route::post('/management/users', [UserController::class, 'store']);
+    Route::put('/management/users/{user}', [UserController::class, 'update']);
+    Route::delete('/management/users/{user}', [UserController::class, 'destroy']);
+});
+
+
+
+ 
+
 
 
 

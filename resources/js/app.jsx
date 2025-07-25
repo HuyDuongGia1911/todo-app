@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import React from 'react';
 import Dashboard from './pages/Dashboard';
 import TaskIndex from './pages/TaskIndex';
-
+import UsersTab from "./components/management/UsersTab"
 // Mount Dashboard
 const elDashboard = document.getElementById('react-dashboard');
 if (elDashboard) {
@@ -20,4 +20,9 @@ const elTaskList = document.getElementById('react-task-list');
 if (elTaskList) {
   const tasks = JSON.parse(elTaskList.dataset.tasks);
   createRoot(elTaskList).render(<TaskIndex tasks={tasks} />);
+}
+//Mount UsersTab
+const el = document.getElementById("users-app");
+if (el) {
+  createRoot(el).render(<UsersTab />);
 }

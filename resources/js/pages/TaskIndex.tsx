@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import Select, { SingleValue } from 'react-select';
 import SidebarEditTask from '../components/SidebarEditTask';
 import { Sun, Sunrise, Moon } from 'lucide-react';
+import Swal from 'sweetalert2';
+
 // Định nghĩa kiểu option cho react-select
 type OptionType = { value: string; label: string };
 
@@ -39,7 +41,7 @@ export default function TaskIndex({ tasks }: Props) {
 
   const itemsPerPage = 10;
 
-  const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+  const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';// gửi kèm CSRF token từ layout đến react
 
   useEffect(() => {
     setCurrentPage(1);
@@ -69,23 +71,36 @@ export default function TaskIndex({ tasks }: Props) {
   };
 
   const applyFilters = (): Task[] => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return taskList.filter(task => {
-      if (tab === 'done' && task.status !== 'Đã hoàn thành') return false;
-      if (tab === 'pending' && task.status !== 'Chưa hoàn thành') return false;
-      if (tab === 'overdue') {
-        const taskDate = new Date(task.task_date);
-        taskDate.setHours(0, 0, 0, 0);
-        if (task.status === 'Đã hoàn thành' || taskDate >= today) return false;
-      }
-      if (priorityFilter && task.priority !== priorityFilter.value) return false;
-      if (taskDateStart && new Date(task.task_date) < new Date(taskDateStart)) return false;
-      if (taskDateEnd && new Date(task.task_date) > new Date(taskDateEnd)) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-      return true;
-    });
-  };
+  return taskList.filter(task => {
+    const taskDate = new Date(task.task_date);
+    taskDate.setHours(0, 0, 0, 0);
+
+    // DONE
+    if (tab === 'done' && task.status !== 'Đã hoàn thành') return false;
+
+    // PENDING (chưa hoàn thành và chưa quá hạn)
+    if (tab === 'pending') {
+      if (task.status !== 'Chưa hoàn thành' || taskDate < today) return false;
+    }
+
+    // OVERDUE (chưa hoàn thành nhưng đã quá hạn)
+    if (tab === 'overdue') {
+      if (task.status !== 'Chưa hoàn thành' || taskDate >= today) return false;
+    }
+
+    // Filter độ ưu tiên
+    if (priorityFilter && task.priority !== priorityFilter.value) return false;
+
+    // Filter ngày công việc
+    if (taskDateStart && new Date(task.task_date) < new Date(taskDateStart)) return false;
+    if (taskDateEnd && new Date(task.task_date) > new Date(taskDateEnd)) return false;
+
+    return true;
+  });
+};
 
   const filteredTasks = applyFilters();
   const totalPages = Math.ceil(filteredTasks.length / itemsPerPage);
@@ -140,24 +155,50 @@ export default function TaskIndex({ tasks }: Props) {
   };
 
   const handleDelete = async (taskId: number) => {
-    if (!confirm('Bạn có chắc chắn muốn xoá công việc này?')) return;
-    try {
-      const res = await fetch(`/tasks/${taskId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': csrf,
-        },
-        body: JSON.stringify({ _method: 'DELETE' }),
-      });
+  const confirmResult = await Swal.fire({
+    title: 'Bạn có chắc chắn?',
+    text: 'Công việc sẽ bị xoá vĩnh viễn!',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Xoá',
+    cancelButtonText: 'Huỷ',
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+  });
 
-      if (!res.ok) throw new Error('Delete failed');
-      setTaskList(prev => prev.filter(t => t.id !== taskId));
-    } catch (err) {
-      alert('Lỗi khi xoá công việc!');
-      console.error(err);
-    }
-  };
+  if (!confirmResult.isConfirmed) return;
+
+  try {
+    const res = await fetch(`/tasks/${taskId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': csrf,
+      },
+      body: JSON.stringify({ _method: 'DELETE' }),
+    });
+
+    if (!res.ok) throw new Error('Delete failed');
+
+    setTaskList(prev => prev.filter(t => t.id !== taskId));
+
+    await Swal.fire({
+      title: 'Đã xoá!',
+      text: 'Công việc đã được xoá thành công.',
+      icon: 'success',
+      timer: 2000,
+      showConfirmButton: false,
+    });
+
+  } catch (err) {
+    console.error(err);
+    await Swal.fire({
+      title: 'Lỗi!',
+      text: 'Không thể xoá công việc.',
+      icon: 'error',
+    });
+  }
+};
 
   const handleQuickAdd = async () => {
     if (!newTaskTitle.trim()) return;

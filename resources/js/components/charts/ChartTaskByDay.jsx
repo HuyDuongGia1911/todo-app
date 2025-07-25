@@ -22,7 +22,7 @@ export default function ChartTaskByDay() {
           <XAxis dataKey="day" />
           <YAxis allowDecimals={false} />
           <Tooltip
-            formatter={(value, name) => [value, 'Số lượng']} // 👈 Đổi nhãn tại đây
+            formatter={(value, name) => [value, 'Số lượng']} // Đổi nhãn tại đây
           />
           <Legend />
 
