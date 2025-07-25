@@ -7,6 +7,8 @@ use App\Http\Controllers\KPIController;
 use App\Http\Controllers\TaskExportController;
 use App\Http\Controllers\MonthlySummaryController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\TaskAdminController;
+use App\Http\Controllers\Admin\KpiAdminController;
 // =============================
 // ✔️ AUTH routes
 // =============================
@@ -49,11 +51,22 @@ Route::middleware(['auth'])->group(function () {
     //admin
 Route::middleware(['auth', 'is_admin'])->group(function () {
     Route::get('/management', fn () => view('management.index'))->name('management');
-
+   // ---- USERS
     Route::get('/management/users', [UserController::class, 'index']);
     Route::post('/management/users', [UserController::class, 'store']);
     Route::put('/management/users/{user}', [UserController::class, 'update']);
-    Route::delete('/management/users/{user}', [UserController::class, 'destroy']);
+    Route::delete('/management/users/{user}', [UserController::class, 'destroy']); 
+ // ---- TASKS (mới) ----
+    Route::get   ('/management/tasks',            [TaskAdminController::class, 'index']);
+    Route::post  ('/management/tasks',            [TaskAdminController::class, 'store']);
+    Route::post  ('/management/tasks/{task}',     [TaskAdminController::class, 'update']);   // dùng POST + _method=PUT từ FE
+    Route::delete('/management/tasks/{task}',     [TaskAdminController::class, 'destroy']);
+// ---- KPI ----
+Route::get('/management/kpis', [\App\Http\Controllers\Admin\KpiAdminControllers::class, 'index']);
+    Route::post('/management/kpis', [\App\Http\Controllers\Admin\KpiAdminControllers::class, 'store']);
+    Route::put('/management/kpis/{kpi}', [\App\Http\Controllers\Admin\KpiAdminControllers::class, 'update']);
+    Route::delete('/management/kpis/{kpi}', [\App\Http\Controllers\Admin\KpiAdminControllers::class, 'destroy']);
+// ---- Report ----
 });
 
 

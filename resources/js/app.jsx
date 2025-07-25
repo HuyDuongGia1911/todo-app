@@ -4,6 +4,7 @@ import React from 'react';
 import Dashboard from './pages/Dashboard';
 import TaskIndex from './pages/TaskIndex';
 import UsersTab from "./components/management/UsersTab"
+import TasksTab from './components/management/TasksTab';
 // Mount Dashboard
 const elDashboard = document.getElementById('react-dashboard');
 if (elDashboard) {
@@ -22,7 +23,15 @@ if (elTaskList) {
   createRoot(elTaskList).render(<TaskIndex tasks={tasks} />);
 }
 //Mount UsersTab
-const el = document.getElementById("users-app");
-if (el) {
-  createRoot(el).render(<UsersTab />);
+const elUserTab = document.getElementById("users-app");
+if (elUserTab) {
+  createRoot(elUserTab).render(<UsersTab />);
+}
+
+//Mount TasksTab
+
+const elTasksTab = document.getElementById("management-app");
+if (elTasksTab) {
+  const root = createRoot(elTasksTab)
+  root.render(<ManagementIndex />);
 }
