@@ -66,6 +66,7 @@ class KPIController extends Controller
             'name'   => $request->name,
             'task_names' => $taskNames,
             'note'       => $request->note,
+              'user_id'      => auth()->id()
         ]);
 
         foreach ($request->task_titles as $index => $title) {

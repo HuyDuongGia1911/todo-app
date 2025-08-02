@@ -4,7 +4,8 @@ import Modal from '../Modal';
 export default function SummaryDetailModal({ summary, onClose, onSaveContent, onRegenerate }) {
   const [editing, setEditing] = useState(false);
   const [content, setContent] = useState(summary.content || '');
-
+  const [selectedKpiId, setSelectedKpiId] = useState(null);
+const selectedKpi = summary.kpis?.find(kpi => kpi.id === selectedKpiId);
  const handleExportExcel = () => {
   // Xuất theo ID của summary hiện tại
   window.open(`/summaries/${summary.id}/export`, '_blank');
@@ -15,34 +16,31 @@ export default function SummaryDetailModal({ summary, onClose, onSaveContent, on
       title={`Chi tiết tháng ${summary.month}`}
       onClose={onClose}
       footer={
-        <>
-          {editing ? (
-            <>
-              <button
-                className="btn btn-success"
-                onClick={() => onSaveContent(summary.id, content)}
-              >
-                Lưu
-              </button>
-              <button className="btn btn-secondary" onClick={() => setEditing(false)}>
-                Hủy
-              </button>
-            </>
-          ) : (
-            !summary.locked_at && (
-              <button className="btn btn-primary" onClick={() => setEditing(true)}>
-                Sửa
-              </button>
-            )
-          )}
-          <button className="btn btn-outline-info" onClick={() => onRegenerate(summary.id)}>
-            Tính lại thống kê
-          </button>
-           <button className="btn btn-success" onClick={handleExportExcel}>
-        Xuất Excel
-      </button>
-        </>
-      }
+  <>
+    {editing ? (
+      <>
+        <button
+          className="btn btn-success"
+          onClick={() => onSaveContent(summary.id, content)}
+        >
+          Lưu
+        </button>
+        <button className="btn btn-secondary" onClick={() => setEditing(false)}>
+          Hủy
+        </button>
+      </>
+    ) : (
+      !summary.locked_at && (
+        <button className="btn btn-primary" onClick={() => setEditing(true)}>
+          Sửa
+        </button>
+      )
+    )}
+    <button className="btn btn-success" onClick={handleExportExcel}>
+      Xuất Excel
+    </button>
+  </>
+}
     >
       <h6 className="fw-bold">Nội dung tổng kết</h6>
       {editing ? (
@@ -81,6 +79,70 @@ export default function SummaryDetailModal({ summary, onClose, onSaveContent, on
           Quá hạn: {summary.stats.overdue || 0}
         </div>
       )}
+      {summary.kpis?.length > 0 && (
+  <>
+    <h6 className="fw-bold mt-4">Đánh giá KPI</h6>
+    <div className="mb-3">
+      <select
+        className="form-select"
+        value={selectedKpiId || ''}
+        onChange={(e) => setSelectedKpiId(parseInt(e.target.value))}
+      >
+        <option value="">-- Chọn KPI để xem --</option>
+        {summary.kpis.map((kpi) => (
+          <option key={kpi.id} value={kpi.id}>
+            {kpi.name}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    {selectedKpi && (
+  <table className="table table-bordered small">
+    <thead>
+      <tr>
+        <th>Hạng mục KPI</th>
+        <th>Thời gian thực hiện</th>
+        <th>KPI</th>
+        <th>Kết quả</th>
+        <th>Tỷ lệ %</th>
+        <th>Đánh giá</th>
+      </tr>
+    </thead>
+    <tbody>
+     {(selectedKpi.task_names_array || []).map((taskTitle, idx) => {
+  const relatedTasks = summary.tasks_cache?.filter(t => t.title === taskTitle) || [];
+
+  const dates = relatedTasks.flatMap(t => t.dates || []);
+  const formattedDates = dates.length
+    ? `${dates[0]} - ${dates[dates.length - 1]}`
+    : 'Không có';
+
+  const resultCount = relatedTasks.reduce((sum, t) => sum + (parseFloat(t.progress || 0)), 0);
+ const taskTargets = selectedKpi.task_targets || {};
+const target = taskTargets[taskTitle] || 0;
+  const percent = target > 0 ? Math.round((resultCount / target) * 100) : 0;
+  const note = percent >= 100 ? 'Đạt' : 'Không đạt';
+
+  return (
+    <tr key={idx}>
+      <td>{taskTitle}</td>
+      <td>{formattedDates}</td>
+      <td>{target}</td>
+      <td>{resultCount}</td>
+      <td>{percent}%</td>
+      <td>{note}</td>
+    </tr>
+  );
+})}
+
+    </tbody>
+  </table>
+)}
+
+  </>
+)}
+
     </Modal>
   );
 }

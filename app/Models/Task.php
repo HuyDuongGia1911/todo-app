@@ -11,7 +11,9 @@ class Task extends Model
 
    protected $fillable = [
     'user_id',
+    'assigned_by', 
     'task_date',
+     'deadline_at',
     'shift',
     'type',
     'title',
@@ -43,5 +45,12 @@ public function status()
 {
     return $this->belongsTo(Status::class, 'status');
 }
-
+public function user()
+{
+    return $this->belongsTo(User::class, 'user_id');
+}
+public function assignedByUser()
+{
+    return $this->belongsTo(User::class, 'assigned_by');
+}
 }

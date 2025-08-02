@@ -16,27 +16,35 @@ use Carbon\Carbon;
 use App\Models\Kpi;
 class TaskController extends Controller
 {
-   public function dashboard()
+  public function dashboard()
 {
-    $today = Carbon::today();
+    $today = Carbon::today(); //lấy ngày hôm nay
+    $userId = auth()->id(); //lấy userid hôm nay qua lavarel
 
-    $taskToday = Task::whereDate('task_date', $today)->count();
+    $taskToday = Task::where('user_id', $userId) 
+        ->whereDate('task_date', $today)
+        ->count(); //đếm số task userid
 
-    $taskOverdue = Task::where('task_date', '<', $today)
-        ->where('status', '!=', 'Đã hoàn thành')
+   $taskOverdue = Task::where('user_id', $userId)
+    ->where('deadline_at', '<', $today)
+    ->where('status', '!=', 'Đã hoàn thành')
+    ->count(); //đếm số task quá hạn
+
+
+    $weeklyTasks = Task::where('user_id', $userId) 
+        ->whereBetween('task_date', [
+            Carbon::now()->startOfWeek(),
+            Carbon::now()->endOfWeek()
+        ]) //đếm số task tuần này
         ->count();
 
-    $weeklyTasks = Task::whereBetween('task_date', [
-        Carbon::now()->startOfWeek(),
-        Carbon::now()->endOfWeek()
-    ])->count();
-
-    $kpisSoon = Kpi::whereDate('end_date', '<=', $today->copy()->addDays(3))
+    $kpisSoon = Kpi::where('user_id', $userId) //  lọc theo KPI của người dùng nếu có
+        ->whereDate('end_date', '<=', $today->copy()->addDays(3))
         ->where('status', '!=', 'Đã hoàn thành')
         ->count();
 
     return view('dashboard', [
-        'taskCount' => Task::count(),
+        'taskCount' => Task::where('user_id', $userId)->count(), // 
         'userName' => auth()->user()->name,
         'dashboardData' => [
             'taskToday' => $taskToday,
@@ -47,57 +55,35 @@ class TaskController extends Controller
     ]);
 }
 
-    public function index(Request $request)
-    {
-        $query = Task::query();
-
-        if ($request->filled('start_date')) {
-            $query->whereDate('task_date', '>=', $request->start_date);
-        }
-        if ($request->filled('end_date')) {
-            $query->whereDate('task_date', '<=', $request->end_date);
-        }
-
-       $tasks = $query
-    ->orderByRaw("FIELD(priority, 'Khẩn cấp', 'Cao', 'Trung bình', 'Thấp')")
-    ->orderBy('task_date', 'desc')
-    ->get();
-
-
-        return view('tasks.index', compact('tasks'));
-    }
-    public function quickAdd(Request $request)
+   public function index(Request $request)
 {
-    $request->validate([
-        'title' => 'required|string|max:255'
-    ]);
-        if (!TaskTitle::where('title_name', $request->title)->exists()) {
-        TaskTitle::create(['title_name' => $request->title]);
+    $query = Task::query()
+        ->where('user_id', auth()->id()); //lấy task của userid hiện tại
+
+    if ($request->filled('start_date')) {
+        $query->whereDate('task_date', '>=', $request->start_date);//lọc bd
+    }
+    if ($request->filled('end_date')) {
+        $query->whereDate('task_date', '<=', $request->end_date);//lọc kt
     }
 
-    // Kiểm tra xem đã có task giống hôm nay chưa
-    $existing = Task::where('title', $request->title)
-        ->where('task_date', now()->toDateString())
-        ->where('user_id', auth()->id())
-        ->first();
+    $tasks = $query
+        ->orderByRaw("FIELD(priority, 'Khẩn cấp', 'Cao', 'Trung bình', 'Thấp')") // sap xep mac dinh
+        ->orderBy('task_date', 'desc') //theo ngay lam viec neu giong do uu tien
+        ->get();
 
-    if ($existing) {
-        return response()->json([
-            'exists' => true,
-            'message' => 'Task này đã tồn tại hôm nay!',
-        ]);
-    }
-
-    // Nếu chưa có, tạo mới luôn
-    $task = Task::create([
-        'title' => $request->title,
-        'task_date' => now()->toDateString(),
-        'user_id' => auth()->id(),
-        'status' => 'Chưa hoàn thành'
-    ]);
-
-    return response()->json(['task' => $task], 201);
+    return view('tasks.index', compact('tasks')); //trả về task index với tasks
 }
+   // app/Http/Controllers/TaskController.php
+public function checkExist(Request $request) //kiểm tra trùng
+{
+    $exists = Task::where('title', $request->title) //tên
+                  ->where('task_date', $request->task_date) //ngày
+                  ->exists(); 
+
+    return response()->json(['exists' => $exists]);
+}
+
 
     public function create()
     {
@@ -116,13 +102,25 @@ class TaskController extends Controller
 
         $data = $request->all();
         $data['user_id'] = auth()->id();
+        // Nếu deadline_at rỗng → mặc định bằng task_date
+if (empty($data['deadline_at'])) {
+    $data['deadline_at'] = $data['task_date'];
+}
+// Nếu priority rỗng → mặc định là 'Thấp'
+    if (empty($data['priority'])) {
+        $data['priority'] = 'Thấp';
+    }
 
-        Task::create($data);
+       $task = Task::create($data);
 
+   
+    if ($request->wantsJson()) {
+        return response()->json($task); //
+    }
         $redirect = $request->redirect_back ?? route('tasks.index');
         return redirect($redirect)->with('success', 'Đã thêm công việc!');
     }
-
+    
     public function edit(Task $task)
     {
         return view('tasks.edit', [
@@ -147,7 +145,15 @@ class TaskController extends Controller
     public function update(Request $request, Task $task)
 {
     $this->autoCreateMeta($request);
-    $task->update($request->all());
+
+    $data = $request->all();
+
+    // ⚠️ Nếu không có deadline_at thì gán mặc định bằng task_date
+    if (empty($data['deadline_at']) && !empty($data['task_date'])) {
+        $data['deadline_at'] = $data['task_date'];
+    }
+
+    $task->update($data);
 
     if ($request->wantsJson()) {
         return response()->json($task); // ✅ trả JSON về React

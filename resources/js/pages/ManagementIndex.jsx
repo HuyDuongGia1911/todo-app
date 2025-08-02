@@ -45,11 +45,5 @@ function ManagementIndex() {
   );
 }
 
-// Mount React
-const el = document.getElementById('management-app');
-if (el) {
-  const root = createRoot(el);
-  root.render(<ManagementIndex />);
-}
 
 export default ManagementIndex;

@@ -3,8 +3,10 @@ import { createRoot } from 'react-dom/client';
 import React from 'react';
 import Dashboard from './pages/Dashboard';
 import TaskIndex from './pages/TaskIndex';
-import UsersTab from "./components/management/UsersTab"
-import TasksTab from './components/management/TasksTab';
+import ManagementIndex from './pages/ManagementIndex'; // thêm dòng này đầu file
+import ProfilePage from './pages/ProfilePage';
+import SummaryIndex from './pages/SummaryIndex';
+import '/PHP/todo-app/resources/css/app.css'
 // Mount Dashboard
 const elDashboard = document.getElementById('react-dashboard');
 if (elDashboard) {
@@ -22,16 +24,18 @@ if (elTaskList) {
   const tasks = JSON.parse(elTaskList.dataset.tasks);
   createRoot(elTaskList).render(<TaskIndex tasks={tasks} />);
 }
-//Mount UsersTab
-const elUserTab = document.getElementById("users-app");
-if (elUserTab) {
-  createRoot(elUserTab).render(<UsersTab />);
+const elManagement = document.getElementById('management-app');
+if (elManagement) {
+  createRoot(elManagement).render(<ManagementIndex />);
 }
-
-//Mount TasksTab
-
-const elTasksTab = document.getElementById("management-app");
-if (elTasksTab) {
-  const root = createRoot(elTasksTab)
-  root.render(<ManagementIndex />);
+// Mount Profile
+const elProfile = document.getElementById('profile-app');
+if (elProfile) {
+  createRoot(elProfile).render(<ProfilePage />);
+}
+// ---- Mount vào #summary-app ----
+const elSummary = document.getElementById('summary-app');
+if (elSummary) {
+  const root = createRoot(elSummary);
+  root.render(<SummaryIndex />);
 }

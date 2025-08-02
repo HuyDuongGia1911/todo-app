@@ -9,10 +9,12 @@ use App\Http\Controllers\MonthlySummaryController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\TaskAdminController;
 use App\Http\Controllers\Admin\KpiAdminController;
+use App\Http\Controllers\Admin\AssignTaskController;
+use App\Http\Controllers\UserProfileController;
 // =============================
 // ✔️ AUTH routes
 // =============================
-Route::get('/', fn () => redirect('/login'));
+Route::get('/', fn() => redirect('/login'));
 Route::get('/register', [AuthController::class, 'showRegister']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -34,11 +36,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/kpis/export', [KPIController::class, 'export'])->name('kpis.export'); //lí do đặt trước là do resource che mất
     Route::resource('kpis', KPIController::class);
     //cap nha trang thai
-   Route::post('/tasks/{task}/status', [TaskController::class, 'updateStatus']);
-   Route::post('/kpis/{kpi}/status', [KPIController::class, 'updateStatus']);
-   //them nhanh
-     Route::post('/tasks/quick-add', [TaskController::class, 'quickAdd'])->name('tasks.quick-add');
-     //tong ket
+    Route::post('/tasks/{task}/status', [TaskController::class, 'updateStatus']);
+    Route::post('/kpis/{kpi}/status', [KPIController::class, 'updateStatus']);
+    //them 
+    Route::post('/tasks/check-exist', [TaskController::class, 'checkExist'])->name('tasks.check-exist');
+    //tong ket
     Route::get('/summaries', [MonthlySummaryController::class, 'index']);
     Route::get('/summaries/{summary}', [MonthlySummaryController::class, 'show']);
     Route::post('/summaries', [MonthlySummaryController::class, 'store']);
@@ -49,34 +51,35 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/summaries/{summary}/export', [MonthlySummaryController::class, 'exportById']);
 
     //admin
-Route::middleware(['auth', 'is_admin'])->group(function () {
-    Route::get('/management', fn () => view('management.index'))->name('management');
-   // ---- USERS
-    Route::get('/management/users', [UserController::class, 'index']);
-    Route::post('/management/users', [UserController::class, 'store']);
-    Route::put('/management/users/{user}', [UserController::class, 'update']);
-    Route::delete('/management/users/{user}', [UserController::class, 'destroy']); 
- // ---- TASKS (mới) ----
-    Route::get   ('/management/tasks',            [TaskAdminController::class, 'index']);
-    Route::post  ('/management/tasks',            [TaskAdminController::class, 'store']);
-    Route::post  ('/management/tasks/{task}',     [TaskAdminController::class, 'update']);   // dùng POST + _method=PUT từ FE
-    Route::delete('/management/tasks/{task}',     [TaskAdminController::class, 'destroy']);
-// ---- KPI ----
-Route::get('/management/kpis', [\App\Http\Controllers\Admin\KpiAdminControllers::class, 'index']);
-    Route::post('/management/kpis', [\App\Http\Controllers\Admin\KpiAdminControllers::class, 'store']);
-    Route::put('/management/kpis/{kpi}', [\App\Http\Controllers\Admin\KpiAdminControllers::class, 'update']);
-    Route::delete('/management/kpis/{kpi}', [\App\Http\Controllers\Admin\KpiAdminControllers::class, 'destroy']);
-// ---- Report ----
-});
+    Route::middleware(['auth', 'is_admin'])->group(function () {
+        Route::get('/management', fn() => view('management.index'))->name('management');
+        // ---- USERS
+        Route::get('/management/users', [UserController::class, 'index']);
+        Route::post('/management/users', [UserController::class, 'store']);
+        Route::put('/management/users/{user}', [UserController::class, 'update']);
+        Route::delete('/management/users/{user}', [UserController::class, 'destroy']);
+        // ---- TASKS (mới) ----
+        Route::get('/management/tasks',            [TaskAdminController::class, 'index']);
+        Route::post('/management/tasks',            [TaskAdminController::class, 'store']);
+        Route::post('/management/tasks/{task}',     [TaskAdminController::class, 'update']);   // dùng POST + _method=PUT từ FE
+        Route::delete('/management/tasks/{task}',     [TaskAdminController::class, 'destroy']);
+        // ---- KPI ----
+        Route::get('/management/kpis', [KpiAdminController::class, 'index']);
+        Route::post('/management/kpis', [KpiAdminController::class, 'store']);
+        Route::put('/management/kpis/{kpi}', [KpiAdminController::class, 'update']);
+        Route::delete('/management/kpis/{kpi}', [KpiAdminController::class, 'destroy']);
+        // ---- Report ----
+    });
 
-
-
- 
-
-
-
-
-    
+    // Assign tasks
+    Route::get('/management/assign/tasks', [AssignTaskController::class, 'index']); // JSON list
+    Route::post('/management/assign/tasks', [AssignTaskController::class, 'store']);
+    Route::put('/management/assign/tasks/{task}', [AssignTaskController::class, 'update']);
+    Route::delete('/management/assign/tasks/{task}', [AssignTaskController::class, 'destroy']);
+    //user profile
+    Route::get('/my-profile', [UserProfileController::class, 'index'])->name('profile.view'); // View React mount
+    Route::get('/my-profile/info', [UserProfileController::class, 'show']);
+    Route::post('/my-profile/update', [UserProfileController::class, 'update']);
 });
 
 use App\Http\Controllers\Api\ShiftApiController;
@@ -85,6 +88,8 @@ use App\Http\Controllers\Api\TitleApiController;
 use App\Http\Controllers\Api\SupervisorApiController;
 use App\Http\Controllers\Api\StatusApiController;
 use App\Http\Controllers\Api\DashboardApiController;
+use App\Models\User;
+
 Route::prefix('api')->middleware('auth')->group(function () {
     Route::prefix('shifts')->group(function () {
         Route::get('/', [ShiftApiController::class, 'index']);
@@ -120,13 +125,13 @@ Route::prefix('api')->middleware('auth')->group(function () {
         Route::put('/{id}', [StatusApiController::class, 'update']);
         Route::delete('/{id}', [StatusApiController::class, 'destroy']);
     });
-  Route::get('/dashboard/tasks-by-day', [DashboardApiController::class, 'tasksByDay']);
-  Route::get('/dashboard/tasks-by-type', [DashboardApiController::class, 'tasksByType']);
-  Route::get('/dashboard/kpi-progress/{id}', [DashboardApiController::class, 'kpiProgress']);
-  Route::get('/kpis', function () {
-    return \App\Models\Kpi::select('id', 'name')->get();
-});
-   
-
-   
+    Route::get('/dashboard/tasks-by-day', [DashboardApiController::class, 'tasksByDay']);
+    Route::get('/dashboard/tasks-by-type', [DashboardApiController::class, 'tasksByType']);
+    Route::get('/dashboard/kpi-progress/{id}', [DashboardApiController::class, 'kpiProgress']);
+    Route::get('/kpis', function () {
+        return \App\Models\Kpi::select('id', 'name')->get();
+    });
+    Route::get('/users', function () {
+        return User::select('id', 'name', 'email', 'avatar')->get();
+    });
 });

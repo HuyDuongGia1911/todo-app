@@ -83,6 +83,17 @@ export default function SidebarEditTask({ task, onClose, onSave }) {
           <label className="form-label">Ngày</label>
           <input type="date" className="form-control" name="task_date" value={form.task_date || ''} onChange={handleChange} />
         </div>
+        <div className="mb-2">
+  <label className="form-label">Hạn hoàn thành (Deadline)</label>
+  <input
+    type="date"
+    className="form-control"
+    name="deadline_at"
+    value={form.deadline_at || ''}
+    onChange={handleChange}
+  />
+</div>
+
 
 <AsyncDropdownSelect
           label="Ca" name="shift" field="shift_name" api="/api/shifts"

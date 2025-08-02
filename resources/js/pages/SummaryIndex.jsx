@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import Swal from 'sweetalert2';
 import SummaryDetailModal from '../components/summaries/SummaryDetailModal';
 
-function SummaryIndex() {
+export default function SummaryIndex() {
   const [summaries, setSummaries] = useState([]);
   const [form, setForm] = useState({ month: '', title: '', content: '' });
   const [viewing, setViewing] = useState(null);
@@ -84,19 +84,23 @@ function SummaryIndex() {
   const handleUpdateContent = async (id, content) => {
   try {
     const res = await fetch(`/summaries/${id}`, {
-      method: 'POST', 
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-CSRF-TOKEN': csrf,
       },
       body: JSON.stringify({
-        _method: 'PUT', 
+        _method: 'PUT',
         content,
       }),
     });
 
     if (!res.ok) throw new Error();
-    const updated = await res.json();
+
+    // ✅ Fetch lại dữ liệu đầy đủ từ show API
+    const resShow = await fetch(`/summaries/${id}`);
+    const updated = await resShow.json();
+
     setSummaries(prev => prev.map(s => (s.id === id ? updated : s)));
     setViewing(updated);
     Swal.fire('Thành công', 'Nội dung đã được cập nhật!', 'success');
@@ -105,21 +109,43 @@ function SummaryIndex() {
   }
 };
 
-  const handleRegenerate = async (id) => {
-    try {
-      const res = await fetch(`/summaries/${id}/regenerate`, {
-        method: 'POST',
-        headers: { 'X-CSRF-TOKEN': csrf },
-      });
-      if (!res.ok) throw new Error();
-      const updated = await res.json();
-      setSummaries(prev => prev.map(s => (s.id === id ? updated : s)));
-      setViewing(updated);
-      Swal.fire('Thành công', 'Đã tính lại thống kê!', 'success');
-    } catch {
-      Swal.fire('Lỗi', 'Không thể tính lại thống kê!', 'error');
-    }
-  };
+const handleRegenerate = async (id) => {
+  try {
+    const res = await fetch(`/summaries/${id}/regenerate`, {
+      method: 'POST',
+      headers: { 'X-CSRF-TOKEN': csrf },
+    });
+    if (!res.ok) throw new Error();
+
+    // ✅ Fetch lại dữ liệu đầy đủ từ show API
+    const resShow = await fetch(`/summaries/${id}`);
+    const updated = await resShow.json();
+
+    setSummaries(prev => prev.map(s => (s.id === id ? updated : s)));
+    setViewing(updated);
+    Swal.fire('Thành công', 'Đã tính lại thống kê!', 'success');
+  } catch {
+    Swal.fire('Lỗi', 'Không thể tính lại thống kê!', 'error');
+  }
+};
+
+const handleOpenSummary = async (id) => {
+  try {
+    // Gọi regenerate
+    await fetch(`/summaries/${id}/regenerate`, {
+      method: 'POST',
+      headers: { 'X-CSRF-TOKEN': csrf },
+    });
+
+    // Lấy lại dữ liệu chi tiết sau khi tính lại
+    const res = await fetch(`/summaries/${id}`);
+    const data = await res.json();
+
+    setViewing(data);
+  } catch (err) {
+    Swal.fire('Lỗi', 'Không thể mở chi tiết báo cáo!', 'error');
+  }
+};
 
   return (
     <div className="p-4">
@@ -159,7 +185,8 @@ function SummaryIndex() {
               <td>
                 <button
                   className="btn btn-info btn-sm me-2"
-                  onClick={() => setViewing(s)}
+                  onClick={() => handleOpenSummary(s.id)}
+
                 >
                   Chi tiết
                 </button>
@@ -187,9 +214,4 @@ function SummaryIndex() {
   );
 }
 
-// ---- Mount vào #summary-app ----
-const el = document.getElementById('summary-app');
-if (el) {
-  const root = createRoot(el);
-  root.render(<SummaryIndex />);
-}
+

@@ -10,6 +10,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
 use App\Models\Task;
 use App\Exports\SingleMonthlySummaryExport;
+use App\Models\KPI;
 class MonthlySummaryController extends Controller
 {
     public function index(Request $request)
@@ -21,32 +22,63 @@ class MonthlySummaryController extends Controller
         }
         return view('summaries.index');
     }
-    public function show(MonthlySummary $summary)
-{
-    $this->authorizeOwner($summary);
-    return response()->json($summary);
-}
 
-   public function store(Request $request)
+
+ 
+public function store(Request $request)
 {
     $data = $this->validateData($request);
-    $data['user_id'] = Auth::id();
 
-    // TÍNH task/thống kê
-    $computed = $this->computeTasksForMonth($data['month'], Auth::id());
-    $data['tasks_cache'] = $computed['items'];
-    $data['stats'] = [
-        'total'        => $computed['total'],
-        'by_type'      => $computed['by_type'],
-        'by_priority'  => $computed['by_priority'],
-        'avg_progress' => $computed['avg_progress'],
-    ];
-    $data['total_tasks'] = $computed['total'];
-
-    $summary = MonthlySummary::create($data);
+    $summary = MonthlySummary::create([
+        'user_id' => Auth::id(),
+        'month' => $data['month'],
+        'title' => $data['title'] ?? '',
+        'content' => $data['content'] ?? '',
+        'stats' => [],
+        'tasks_cache' => [],
+    ]);
 
     return response()->json($summary, 201);
 }
+
+public function show(MonthlySummary $summary)
+{
+    $this->authorizeOwner($summary);
+
+    $month = Carbon::parse($summary->month);
+
+    // Lấy tất cả KPI của user trong tháng
+    $kpis = KPI::with('tasks')
+        ->where('user_id', $summary->user_id)
+        ->whereDate('start_date', '<=', $month->endOfMonth())
+        ->whereDate('end_date', '>=', $month->startOfMonth())
+        ->get()
+        ->map(function ($kpi) {
+            return [
+                'id' => $kpi->id,
+                'name' => $kpi->name,
+                'note' => $kpi->note,
+                'task_names' => $kpi->tasks->pluck('task_title')->implode(', '),
+                'task_names_array' => $kpi->tasks->pluck('task_title')->toArray(), // Sửa tại đây
+                  'task_targets' => $kpi->tasks->pluck('target_progress', 'task_title'),
+            ];
+        })
+        ->values()
+        ->toArray();
+
+    return response()->json([
+        'id' => $summary->id,
+        'month' => $summary->month,
+        'title' => $summary->title,
+        'content' => $summary->content,
+        'locked_at' => $summary->locked_at,
+        'tasks_cache' => $summary->tasks_cache,
+        'stats' => $summary->stats,
+        'kpis' => $kpis,
+    ]);
+}
+
+
 
 
     public function update(Request $request, MonthlySummary $summary)

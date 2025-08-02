@@ -6,9 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class MonthlySummary extends Model
 {
-    protected $fillable = [
-        'user_id', 'month', 'title', 'content', 'stats', 'locked_at'
-    ];
+protected $fillable = [
+    'user_id', 'month', 'title', 'content', 'stats', 'locked_at', 'tasks_cache'
+];
+
 
     protected $casts = [
         'stats'     => 'array',
