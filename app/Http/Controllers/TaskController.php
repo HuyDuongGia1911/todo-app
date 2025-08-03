@@ -247,9 +247,15 @@ public function updateStatus(Request $request, Task $task)
         if (!empty($request->title) && !TaskTitle::where('title_name', $request->title)->exists()) {
             TaskTitle::create(['title_name' => $request->title]);
         }
-        if (!empty($request->supervisor) && !Supervisor::where('supervisor_name', $request->supervisor)->exists()) {
-            Supervisor::create(['supervisor_name' => $request->supervisor]);
-        }
+       if (!empty($request->supervisor)) {
+    // Nếu tên đã tồn tại trong bảng users thì KHÔNG tạo supervisor mới
+    $isUser = \App\Models\User::where('name', $request->supervisor)->exists();
+
+    if (!$isUser && !Supervisor::where('supervisor_name', $request->supervisor)->exists()) {
+        Supervisor::create(['supervisor_name' => $request->supervisor]);
+    }
+}
+
         if (!empty($request->status) && !Status::where('status_name', $request->status)->exists()) {
             Status::create(['status_name' => $request->status]);
         }

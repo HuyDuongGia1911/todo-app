@@ -87,7 +87,8 @@ export default function TaskIndex({ tasks }: Props) {
       // Bộ lọc theo tab
       if (tab === 'done' && task.status !== 'Đã hoàn thành') return false;
       if (tab === 'pending' && (task.status !== 'Chưa hoàn thành' || taskDeadline < today)) return false;
-      if (tab === 'overdue' && (task.status !== 'Chưa hoàn thành' || taskDeadline >= today)) return false;
+     if (tab === 'overdue' && (task.status !== 'Chưa hoàn thành' || taskDeadline >= today)){ console.log(taskDeadline, today); return false;}
+
 
       // Bộ lọc ưu tiên
       if (priorityFilter && task.priority !== priorityFilter.value) return false;
@@ -256,7 +257,20 @@ export default function TaskIndex({ tasks }: Props) {
           { key: 'all', label: 'Tất cả', count: taskList.length, color: 'dark' },
           { key: 'done', label: 'Đã hoàn thành', color: 'green', count: taskList.filter(t => t.status === 'Đã hoàn thành').length },
           { key: 'pending', label: 'Chưa hoàn thành', color: 'orange', count: taskList.filter(t => t.status === 'Chưa hoàn thành' && new Date(t.deadline_at || t.task_date) >= new Date()).length },
-          { key: 'overdue', label: 'Quá hạn', color: 'red', count: taskList.filter(t => t.status === 'Chưa hoàn thành' && new Date(t.deadline_at || t.task_date) < new Date()).length },
+          {
+  key: 'overdue',
+  label: 'Quá hạn',
+  color: 'red',
+  count: taskList.filter(t => {
+    const taskDeadline = new Date(t.deadline_at || t.task_date);
+    taskDeadline.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return t.status === 'Chưa hoàn thành' && taskDeadline < today;
+  }).length,
+}
+
         ].map(tabItem => (
           <div
             key={tabItem.key}

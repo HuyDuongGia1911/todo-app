@@ -1,107 +1,12 @@
 @extends('layouts.app')
 
 @section('content')
-<h2>Danh sách KPI</h2>
-
-<!-- Filter -->
-<form action="{{ route('kpis.index') }}" method="GET" class="row g-2 mb-3">
-    <div class="col-auto">
-        <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}">
-    </div>
-    <div class="col-auto">
-        <input type="date" name="end_date" class="form-control" value="{{ request('end_date') }}">
-    </div>
-    <div class="col-auto">
-        <button class="btn btn-primary">Lọc</button>
-        <a href="{{ route('kpis.index') }}" class="btn btn-secondary">Xoá lọc</a>
-    </div>
-</form>
-
-<div class="mb-3">
-    <a href="{{ route('kpis.create') }}" class="btn btn-success">Thêm KPI</a>
-    <button class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#exportKPIModal">Xuất Excel</button>
-</div>
-
-<table class="table">
-    <thead>
-        <tr>
-            <th>Ngày bắt đầu</th>
-            <th>Ngày đến hạn</th>
-            <th>Tên Deadline</th>
-            <th>Tiến độ</th>
-            <th>Chi tiết</th>
-            <th>Hành động</th>
-            <th>Trạng thái</th>
-        </tr>
-    </thead>
-    <tbody>
-    @foreach($kpis as $kpi)
-      <tr id="kpi-row-{{ $kpi->id }}" class="{{ $kpi->status === 'Đã hoàn thành' ? 'opacity-50' : '' }}">
-    <td>{{ $kpi->start_date }}</td>
-    <td>{{ $kpi->end_date }}</td>
-    <td>{{ $kpi->name }}</td>
-    <td>{{ $kpi->calculated_progress }}%</td> {{-- ✅ Chỉ hiển thị đã tính trong Controller --}}
-    <td>
-        <a href="{{ route('kpis.show', $kpi->id) }}" class="btn btn-primary btn-sm">Chi tiết</a>
-    </td>
-    <td>
-        <form action="{{ route('kpis.edit', $kpi->id) }}" method="GET" style="display:inline;">
-            <button type="submit" class="btn btn-warning btn-sm edit-btn" {{ $kpi->status === 'Đã hoàn thành' ? 'disabled' : '' }}>
-                Sửa
-            </button>
-        </form>
-        <form action="{{ route('kpis.destroy', $kpi->id) }}" method="POST" style="display:inline;">
-            @csrf @method('DELETE')
-            <button class="btn btn-danger btn-sm delete-btn" onclick="return confirm('Xoá deadline này?')" {{ $kpi->status === 'Đã hoàn thành' ? 'disabled' : '' }}>
-                Xoá
-            </button>
-        </form>
-    </td>
-    <td>
-        <div class="toggler">
-            <input id="kpi-toggle-{{ $kpi->id }}" type="checkbox"
-                onchange="updateKPIStatus({{ $kpi->id }}, this.checked ? 'Đã hoàn thành' : 'Chưa hoàn thành')"
-                {{ $kpi->status === 'Đã hoàn thành' ? 'checked' : '' }}>
-            <label for="kpi-toggle-{{ $kpi->id }}">
-                <svg class="toggler-on" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130.2 130.2">
-                    <polyline class="path check" points="100.2,40.2 51.5,88.8 29.8,67.5"></polyline>
-                </svg>
-                <svg class="toggler-off" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130.2 130.2">
-                    <line class="path line" x1="34.4" y1="34.4" x2="95.8" y2="95.8"></line>
-                    <line class="path line" x1="95.8" y1="34.4" x2="34.4" y2="95.8"></line>
-                </svg>
-            </label>
-        </div>
-    </td>
-</tr>
-    @endforeach
-    </tbody>
-</table>
-
-<!-- Modal xuất Excel -->
-<div class="modal fade" id="exportKPIModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Xuất Excel</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p>Chọn tùy chọn xuất:</p>
-                <a href="{{ route('kpis.export', ['type' => 'all']) }}" class="btn btn-primary w-100 mb-2">Xuất toàn bộ</a>
-                <a href="{{ route('kpis.export', ['type' => 'filtered', 'start_date' => request('start_date'), 'end_date' => request('end_date')]) }}" class="btn btn-secondary w-100">Xuất bảng hiện tại</a>
-            </div>
-        </div>
-    </div>
-</div>
-
-@if(session('error'))
-<div class="alert alert-danger alert-dismissible fade show" role="alert">
-    {{ session('error') }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-</div>
-@endif
+  <div id="kpi-app"
+       data-kpis='@json($kpis)'
+       data-filters='@json(["start_date" => request("start_date"), "end_date" => request("end_date")])'>
+  </div>
 @endsection
+
 
 @section('scripts')
 <script>

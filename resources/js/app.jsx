@@ -6,6 +6,7 @@ import TaskIndex from './pages/TaskIndex';
 import ManagementIndex from './pages/ManagementIndex'; // thêm dòng này đầu file
 import ProfilePage from './pages/ProfilePage';
 import SummaryIndex from './pages/SummaryIndex';
+import KpiPage from './pages/KpiPage';
 import '/PHP/todo-app/resources/css/app.css'
 // Mount Dashboard
 const elDashboard = document.getElementById('react-dashboard');
@@ -38,4 +39,13 @@ const elSummary = document.getElementById('summary-app');
 if (elSummary) {
   const root = createRoot(elSummary);
   root.render(<SummaryIndex />);
+}
+// Mount KPI
+const elKpi = document.getElementById('kpi-app');
+if (elKpi) {
+  const props = {
+    initialKpis: JSON.parse(elKpi.dataset.kpis),
+    filters: JSON.parse(elKpi.dataset.filters),
+  };
+  createRoot(elKpi).render(<KpiPage {...props} />);
 }

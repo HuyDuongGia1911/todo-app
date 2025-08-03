@@ -15,7 +15,8 @@ export default function AsyncDropdownSelect({
   const [options, setOptions] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [newValue, setNewValue] = useState("");
-
+  const getRealId = (id) =>
+  typeof id === "string" && id.includes("-") ? id.split("-")[1] : id;
   const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
 
   // Load dữ liệu từ API
@@ -48,7 +49,16 @@ export default function AsyncDropdownSelect({
           }));
 
 
-          setOptions([...mappedUsers, ...mappedSupers]);
+          const merged = [...mappedUsers];
+
+mappedSupers.forEach((s) => {
+  const existsInUsers = mappedUsers.some((u) => u.value === s.value);
+  if (!existsInUsers) {
+    merged.push(s);
+  }
+});
+
+setOptions(merged);
         } else {
           const res = await fetch(api);
           const data = await res.json();
@@ -121,14 +131,13 @@ export default function AsyncDropdownSelect({
     if (!result.isConfirmed) return;
 
     try {
-      const res = await fetch(`${api}/${id}`, {
-        method: "DELETE",
-        headers: {
-          Accept: "application/json",
-          "X-CSRF-TOKEN": csrf,
-        },
-      });
-
+     const res = await fetch(`${api}/${getRealId(id)}`, {
+  method: "DELETE",
+  headers: {
+    Accept: "application/json",
+    "X-CSRF-TOKEN": csrf,
+  },
+});
       if (!res.ok) throw new Error();
 
       setOptions((prev) => prev.filter((o) => o.id !== id));
@@ -152,16 +161,15 @@ export default function AsyncDropdownSelect({
 
   const handleEdit = async (id) => {
     try {
-      const res = await fetch(`${api}/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "X-CSRF-TOKEN": csrf,
-        },
-        body: JSON.stringify({ [field]: newValue }),
-      });
-
+      const res = await fetch(`${api}/${getRealId(id)}`, {
+  method: "PUT",
+  headers: {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+    "X-CSRF-TOKEN": csrf,
+  },
+  body: JSON.stringify({ [field]: newValue }),
+});
       if (!res.ok) throw new Error("Sửa thất bại");
 
       // Cập nhật danh sách + cập nhật value
@@ -244,46 +252,64 @@ export default function AsyncDropdownSelect({
         </div>
 
         {/* Nút Sửa/Xoá (chỉ hiển thị khi không đang sửa) */}
-        {creatable && options.length > 0 && editingId === null &&
-  options
-    .filter(item => item.id === options.find(opt => opt.value === value)?.id)
-    .map(item => (
-      <div key={item.id} className="ms-2 d-flex align-items-center">
-        <FaEdit
-          role="button"
-          className="text-primary me-2"
-          onClick={() => {
-            setEditingId(item.id);
-            setNewValue(item.label);
-          }}
-        />
-        <FaTrash
-          role="button"
-          className="text-danger"
-          onClick={() => handleDelete(item.id)}
-        />
-      </div>
-    ))}
+     {creatable && editingId === null && (() => {
+  const selectedItem = options.find(opt => opt.value === value);
+  if (!selectedItem || typeof selectedItem.id !== "string" || !selectedItem.id.startsWith("super-")) return null;
+
+  return (
+    <div key={selectedItem.id} className="ms-2 d-flex align-items-center">
+      <FaEdit
+        role="button"
+        className="text-primary me-2"
+        onClick={() => {
+          setEditingId(selectedItem.id);
+          setNewValue(selectedItem.label);
+        }}
+      />
+      <FaTrash
+        role="button"
+        className="text-danger"
+        onClick={() => handleDelete(selectedItem.id)}
+      />
+    </div>
+  );
+})()}
+
+
+
 
       </div>
 
       {/* Khi bấm sửa, hiển thị ô sửa THAY THẾ dropdown */}
       {editingId !== null && (
-        <form
-          onSubmit={(e) => {
-            e.preventDefault(); // ✅ tránh reload
-            handleEdit(editingId);
-          }}
-          className="mt-2 d-flex align-items-center"
-        >
-          <input
-            className="form-control form-control-sm me-2"
-            value={newValue}
-            onChange={(e) => setNewValue(e.target.value)}
-          />
-          <button type="submit" className="btn btn-sm btn-primary me-1">Lưu</button>
-          <button type="button" className="btn btn-sm btn-secondary" onClick={() => setEditingId(null)}>Huỷ</button>
-        </form>
+       <div className="mt-2 d-flex align-items-center">
+  <input
+    className="form-control form-control-sm me-2"
+    value={newValue}
+    onChange={(e) => setNewValue(e.target.value)}
+    onKeyDown={(e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleEdit(editingId);
+      }
+    }}
+  />
+  <button
+    type="button"
+    className="btn btn-sm btn-primary me-1"
+    onClick={() => handleEdit(editingId)}
+  >
+    Lưu
+  </button>
+  <button
+    type="button"
+    className="btn btn-sm btn-secondary"
+    onClick={() => setEditingId(null)}
+  >
+    Huỷ
+  </button>
+</div>
+
       )}
 
     </div>

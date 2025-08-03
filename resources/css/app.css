@@ -191,3 +191,11 @@
 .no-caret-dropdown::after {
   display: none !important;
 }
+
+
+/*ẩn tự tạo*/
+input[type="password"]::-ms-reveal,
+input[type="password"]::-webkit-reveal-button,
+input[type="password"]::-webkit-credentials-auto-fill-button {
+  display: none !important;
+}

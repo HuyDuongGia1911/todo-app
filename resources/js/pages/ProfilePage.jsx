@@ -9,6 +9,9 @@ export default function ProfilePage() {
     avatar: null,
     current_avatar: '', // URL ảnh hiển thị
   });
+  const [showPassword, setShowPassword] = useState(false);
+const [showConfirm, setShowConfirm] = useState(false);
+
 
   useEffect(() => {
     fetch('/my-profile/info', {
@@ -99,25 +102,40 @@ export default function ProfilePage() {
           />
         </div>
 
-        <div className="mb-3">
-          <label className="form-label">Mật khẩu mới</label>
-          <input
-            type="password"
-            className="form-control"
-            name="password"
-            value={form.password || ''}
-            onChange={handleChange}
-          />
-        </div>
-        <div className="mb-3">
-  <label className="form-label">Xác nhận mật khẩu</label>
+       <div className="input-group">
   <input
-    type="password"
+    type={showPassword ? 'text' : 'password'}
+    className="form-control"
+    name="password"
+    value={form.password || ''}
+    onChange={handleChange}
+  />
+  <button
+    type="button"
+    className="btn btn-outline-secondary"
+    onClick={() => setShowPassword(p => !p)}
+    tabIndex={-1}
+  >
+    {showPassword ? 'Ẩn' : 'Hiện'}
+  </button>
+</div>
+
+       <div className="input-group">
+  <input
+    type={showConfirm ? 'text' : 'password'}
     className="form-control"
     name="password_confirmation"
     value={form.password_confirmation}
     onChange={handleChange}
   />
+  <button
+    type="button"
+    className="btn btn-outline-secondary"
+    onClick={() => setShowConfirm(p => !p)}
+    tabIndex={-1}
+  >
+    {showConfirm ? 'Ẩn' : 'Hiện'}
+  </button>
 </div>
 
         <div className="mb-3">
