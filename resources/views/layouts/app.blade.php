@@ -96,6 +96,22 @@
       z-index: 999;
       box-shadow: 0 2px 6px rgba(0,0,0,0.15);
     }
+      /* submenu trong Quản lý */
+  #mgmtMenu .nav-link {
+    font-weight: 500;
+    font-size: 14px;
+    color: #e9ecef;
+    border-radius: 6px;
+  }
+  #mgmtMenu .nav-link:hover {
+    background-color: #495057;
+    color: #fff;
+  }
+  /* chevron xoay khi mở */
+  a[aria-controls="mgmtMenu"][aria-expanded="true"] .bi-chevron-down {
+    transform: rotate(180deg);
+    transition: transform .2s ease;
+  }
   </style>
 </head>
 
@@ -150,11 +166,51 @@
       <li><a href="/kpis" class="nav-link {{ request()->is('kpis*') ? 'active' : '' }}"><i class="bi bi-speedometer2"></i> KPI</a></li>
       <li><a href="/summaries" class="nav-link {{ request()->is('summaries*') ? 'active' : '' }}"><i class="bi bi-clipboard-check"></i> Báo cáo</a></li>
       
-      @auth
-        @if(Auth::user()->is_admin)
-        <li><a href="{{ route('management') }}" class="nav-link {{ request()->is('management') ? 'active' : '' }}"><i class="bi bi-gear-fill"></i> Quản lý</a></li>
-        @endif
-      @endauth
+   @auth
+  @if(Auth::user()->is_admin)
+    <li>
+      <a class="nav-link d-flex justify-content-between align-items-center"
+         data-bs-toggle="collapse"
+         href="#mgmtMenu"
+         role="button"
+         aria-expanded="false"
+         aria-controls="mgmtMenu">
+        <span><i class="bi bi-gear-fill me-2"></i> Quản lý</span>
+        <i class="bi bi-chevron-down small"></i>
+      </a>
+
+      <div class="collapse mt-1" id="mgmtMenu">
+        <ul class="list-unstyled ps-3 mb-0">
+          <li>
+            <a href="#" class="nav-link py-1">
+              <i class="bi bi-people me-2"></i> Người dùng
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-link py-1">
+              <i class="bi bi-journal-text me-2"></i> Công việc
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-link py-1">
+              <i class="bi bi-speedometer2 me-2"></i> KPI
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-link py-1">
+              <i class="bi bi-clipboard-check me-2"></i> Báo cáo
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-link py-1">
+              <i class="bi bi-send-check me-2"></i> Giao việc
+            </a>
+          </li>
+        </ul>
+      </div>
+    </li>
+  @endif
+@endauth
       <li>
   <a href="/my-profile" class="nav-link {{ request()->is('my-profile') ? 'active' : '' }}">
     <i class="bi bi-person-circle"></i> Hồ sơ cá nhân

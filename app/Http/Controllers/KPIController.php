@@ -12,28 +12,30 @@ class KPIController extends Controller
 {
     public function index(Request $request)
 {
-    $query = KPI::query();
+    $query = KPI::where('user_id', auth()->id())->with('tasks');
 
-    if ($request->filled('start_date')) {
-        $query->whereDate('start_date', '>=', $request->start_date);
-    }
-    if ($request->filled('end_date')) {
-        $query->whereDate('end_date', '<=', $request->end_date);
+    // ?month=2025-08
+    if ($request->filled('month')) {
+        $m = \Carbon\Carbon::createFromFormat('Y-m', $request->input('month'));
+        $start = $m->copy()->startOfMonth()->toDateString();
+        $end   = $m->copy()->endOfMonth()->toDateString();
+        $query->whereDate('start_date', '>=', $start)
+              ->whereDate('end_date', '<=', $end);
     }
 
     $kpis = $query->orderBy('end_date')->get();
 
-    // Tính tiến độ thực tế cho mỗi KPI
+    // Tính tiến độ thực tế theo tháng cặp start/end đã lưu
     foreach ($kpis as $kpi) {
         $start = min($kpi->start_date, $kpi->end_date);
-        $end = max($kpi->start_date, $kpi->end_date);
+        $end   = max($kpi->start_date, $kpi->end_date);
         $userId = auth()->id();
 
         $totalActual = 0;
         $totalTarget = 0;
 
         foreach ($kpi->tasks as $task) {
-            $actual = Task::where('title', $task->task_title)
+            $actual = Task::whereRaw('LOWER(title) = ?', [strtolower($task->task_title)])
                 ->whereBetween('task_date', [$start, $end])
                 ->where('user_id', $userId)
                 ->where('status', 'Đã hoàn thành')
@@ -50,38 +52,68 @@ class KPIController extends Controller
 }
 
 
+
     public function create()
     {
         $tasks = TaskTitle::pluck('title_name');
         return view('kpis.create', compact('tasks'));
     }
 
-    public function store(Request $request)
-    {
-        $taskNames = implode(',', $request->task_titles ?? []);
+   public function store(Request $request)
+{
+    $data = $request->validate([
+        'month'          => 'required|date_format:Y-m',
+        'name'           => 'required|string|max:255',
+        'task_titles'    => 'array',
+        'task_titles.*'  => 'string',
+        'target_progresses' => 'array',
+        'note'           => 'nullable|string',
+    ]);
 
-        $kpi = KPI::create([
-            'start_date' => $request->start_date,
-            'end_date'   => $request->end_date,
-            'name'   => $request->name,
-            'task_names' => $taskNames,
-            'note'       => $request->note,
-              'user_id'      => auth()->id()
-        ]);
+    $userId = auth()->id();
+    $m = \Carbon\Carbon::createFromFormat('Y-m', $data['month']);
+    $start = $m->copy()->startOfMonth()->toDateString();
+    $end   = $m->copy()->endOfMonth()->toDateString();
 
-        foreach ($request->task_titles as $index => $title) {
-            if (!TaskTitle::where('title_name', $title)->exists()) {
-                TaskTitle::create(['title_name' => $title]);
-            }
+    // Check KPI đã tồn tại trong cùng tháng (per user)
+    $exists = KPI::where('user_id', $userId)
+        ->where(function ($q) use ($start, $end) {
+            // vì mình lưu đúng nguyên tháng, check đơn giản:
+            $q->whereDate('start_date', $start)->whereDate('end_date', $end);
+        })
+        ->exists();
 
-            $kpi->tasks()->create([
-                'task_title' => $title,
-                'target_progress' => $request->target_progresses[$index] ?? 0,
-            ]);
+    if ($exists) {
+        // Nếu dùng Blade form:
+        return back()->withErrors(['month' => 'Tháng này đã có KPI!'])->withInput();
+        // Nếu sau này dùng fetch JSON: return response()->json(['message' => 'Tháng này đã có KPI!'], 422);
+    }
+
+    $taskNames = implode(',', $request->task_titles ?? []);
+
+    $kpi = KPI::create([
+        'user_id'    => $userId,
+        'start_date' => $start,
+        'end_date'   => $end,
+        'name'       => $request->name,
+        'task_names' => $taskNames,
+        'note'       => $request->note,
+    ]);
+
+    foreach ($request->task_titles ?? [] as $index => $title) {
+        if (!TaskTitle::where('title_name', $title)->exists()) {
+            TaskTitle::create(['title_name' => $title]);
         }
 
-        return redirect()->route('kpis.index')->with('success', 'Đã tạo KPI!');
+        $kpi->tasks()->create([
+            'task_title' => $title,
+            'target_progress' => $request->target_progresses[$index] ?? 0,
+        ]);
     }
+
+    return redirect()->route('kpis.index')->with('success', 'Đã tạo KPI!');
+}
+
 
     public function show(KPI $kpi)
 {
@@ -129,38 +161,63 @@ class KPIController extends Controller
         return view('kpis.edit', compact('kpi', 'tasks', 'selectedTasks'));
     }
 
-    public function update(Request $request, KPI $kpi)
-    {
-        $taskNames = implode(',', $request->task_titles ?? []);
+   public function update(Request $request, KPI $kpi)
+{
+    $data = $request->validate([
+        'month'             => 'required|date_format:Y-m',
+        'name'              => 'required|string|max:255',
+        'task_titles'       => 'array',
+        'task_titles.*'     => 'string',
+        'target_progresses' => 'array',
+        'note'              => 'nullable|string',
+    ]);
 
-        $kpi->update([
-            'start_date' => $request->start_date,
-            'end_date'   => $request->end_date,
-            'name'   => $request->name,
-            'task_names' => $taskNames,
-            'note'       => $request->note,
-        ]);
+    $userId = auth()->id();
+    $m = \Carbon\Carbon::createFromFormat('Y-m', $data['month']);
+    $start = $m->copy()->startOfMonth()->toDateString();
+    $end   = $m->copy()->endOfMonth()->toDateString();
 
-        $kpi->tasks()->delete();
+    $exists = KPI::where('user_id', $userId)
+        ->whereDate('start_date', $start)
+        ->whereDate('end_date', $end)
+        ->where('id', '!=', $kpi->id)
+        ->exists();
 
-        foreach ($request->task_titles as $index => $title) {
-            if (!TaskTitle::where('title_name', $title)->exists()) {
-                TaskTitle::create(['title_name' => $title]);
-            }
+    if ($exists) {
+        // React detail modal đang expect JSON
+        return response()->json(['message' => 'Tháng này đã có KPI!'], 422);
+    }
 
-            $kpi->tasks()->create([
-                'task_title' => $title,
-                'target_progress' => $request->target_progresses[$index] ?? 0,
-            ]);
+    $taskNames = implode(',', $request->task_titles ?? []);
+
+    $kpi->update([
+        'start_date' => $start,
+        'end_date'   => $end,
+        'name'       => $request->name,
+        'task_names' => $taskNames,
+        'note'       => $request->note,
+    ]);
+
+    $kpi->tasks()->delete();
+
+    foreach ($request->task_titles ?? [] as $index => $title) {
+        if (!TaskTitle::where('title_name', $title)->exists()) {
+            TaskTitle::create(['title_name' => $title]);
         }
 
-        return redirect()->route('kpis.index')->with('success', 'Đã cập nhật KPI!');
+        $kpi->tasks()->create([
+            'task_title' => $title,
+            'target_progress' => $request->target_progresses[$index] ?? 0,
+        ]);
     }
+
+    return redirect()->route('kpis.index')->with('success', 'Đã cập nhật KPI!');
+}
 
     public function destroy(KPI $kpi)
     {
         $kpi->delete();
-        return redirect()->route('kpis.index')->with('success', 'Đã xoá KPI!');
+         return response()->json(['message' => 'Deleted successfully']);
     }
     public function updateStatus(Request $request, KPI $kpi)
 {
@@ -174,24 +231,43 @@ class KPIController extends Controller
     return response()->json(['success' => true]);
 }
 
-    public function export(Request $request)
-{
-    $type = $request->query('type', 'all');
-    $query = KPI::query();
 
-    if ($type === 'filtered') {
-        if (!$request->filled('start_date') && !$request->filled('end_date')) {
-            return redirect()->back()->with('error', 'Vui lòng chọn ít nhất một ngày bắt đầu hoặc ngày kết thúc để lọc!');
-        }
-        if ($request->filled('start_date')) {
-            $query->whereDate('start_date', '>=', $request->start_date);
-        }
-        if ($request->filled('end_date')) {
-            $query->whereDate('end_date', '<=', $request->end_date);
-        }
+public function showJson(KPI $kpi)
+{
+    $start = min($kpi->start_date, $kpi->end_date);
+    $end = max($kpi->start_date, $kpi->end_date);
+    $userId = auth()->id();
+
+    $tasksData = [];
+    $totalActual = 0;
+    $totalTarget = 0;
+
+    foreach ($kpi->tasks as $kpiTask) {
+        $actualProgress = Task::whereRaw('LOWER(title) = ?', [strtolower($kpiTask->task_title)])
+            ->whereBetween('task_date', [$start, $end])
+            ->where('user_id', $userId)
+            ->where('status', 'Đã hoàn thành')
+            ->sum('progress');
+
+        $target = $kpiTask->target_progress ?? 0;
+
+        $tasksData[] = [
+            'title' => $kpiTask->task_title,
+            'actual' => $actualProgress,
+            'target' => $target,
+        ];
+
+        $totalActual += $actualProgress;
+        $totalTarget += $target;
     }
 
-    return Excel::download(new KPIsExport($query), 'kpis_' . $type . '.xlsx');
+    return response()->json([
+        'kpi' => $kpi,
+        'tasks' => $tasksData,
+        'overallProgress' => $totalTarget > 0 ? round($totalActual / $totalTarget * 100) : 0,
+    ]);
 }
+
+
   
 }

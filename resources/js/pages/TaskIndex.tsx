@@ -599,7 +599,10 @@ export default function TaskIndex({ tasks }: Props) {
       </div>
     </div>
     {showAddModal && (
-  <Modal title="Thêm công việc" onClose={() => setShowAddModal(false)}>
+<Modal
+isOpen={showAddModal}
+title="Thêm công việc" onClose={() => setShowAddModal(false)}
+>
     <TaskAddForm
       onCancel={() => setShowAddModal(false)}
       onSuccess={(newTask) => {
@@ -609,8 +612,10 @@ export default function TaskIndex({ tasks }: Props) {
     />
   </Modal>
 )}
-{editingTask && typeof editingTask === 'object' && (
-  <Modal title="Sửa công việc" onClose={() => setEditingTask(null)}>
+<Modal  isOpen={!!editingTask}
+   title="Sửa công việc"
+   onClose={() => setEditingTask(null)}
+>
     <TaskEditForm
       task={editingTask}
       onCancel={() => setEditingTask(null)}
@@ -620,7 +625,7 @@ export default function TaskIndex({ tasks }: Props) {
       }}
     />
   </Modal>
-)}
+
 
   <ExportModal
   show={showExportModal}

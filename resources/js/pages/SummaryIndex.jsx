@@ -17,22 +17,38 @@ export default function SummaryIndex() {
       .catch(() => Swal.fire('Lỗi', 'Không tải được dữ liệu!', 'error'));
   }, []);
 
-  const handleSave = async () => {
-    try {
-      const res = await fetch('/summaries', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
-        body: JSON.stringify(form),
-      });
-      if (!res.ok) throw new Error();
-      const newSummary = await res.json();
-      setSummaries(prev => [newSummary, ...prev]);
-      Swal.fire('Thành công', 'Đã thêm báo cáo!', 'success');
-      setForm({ month: '', title: '', content: '' });
-    } catch {
-      Swal.fire('Lỗi', 'Không thể thêm báo cáo!', 'error');
+ const handleSave = async () => {
+  if (!form.month || !/^\d{4}-\d{2}$/.test(form.month)) {
+    Swal.fire('Thiếu dữ liệu', 'Vui lòng chọn tháng hợp lệ (YYYY-MM)!', 'warning');
+    return;
+  }
+
+  try {
+    const res = await fetch('/summaries', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': csrf,
+      },
+      body: JSON.stringify(form),
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      console.error('Lỗi khi thêm báo cáo:', error);
+      throw new Error(error.message || 'Lỗi không xác định');
     }
-  };
+
+    const newSummary = await res.json();
+    setSummaries(prev => [newSummary, ...prev]);
+    Swal.fire('Thành công', 'Đã thêm báo cáo!', 'success');
+    setForm({ month: '', title: '', content: '' });
+  } catch (err) {
+    Swal.fire('Lỗi', err.message || 'Không thể thêm báo cáo!', 'error');
+  }
+};
+
+
 
   const handleDelete = async (id) => {
     const confirm = await Swal.fire({
@@ -131,18 +147,19 @@ const handleRegenerate = async (id) => {
 
 const handleOpenSummary = async (id) => {
   try {
-    // Gọi regenerate
     await fetch(`/summaries/${id}/regenerate`, {
       method: 'POST',
       headers: { 'X-CSRF-TOKEN': csrf },
     });
 
-    // Lấy lại dữ liệu chi tiết sau khi tính lại
     const res = await fetch(`/summaries/${id}`);
     const data = await res.json();
 
+    console.log('Chi tiết summary:', data); // ✅ thêm dòng này
+
     setViewing(data);
   } catch (err) {
+    console.error(err); // ✅ log lỗi chi tiết
     Swal.fire('Lỗi', 'Không thể mở chi tiết báo cáo!', 'error');
   }
 };
@@ -203,12 +220,13 @@ const handleOpenSummary = async (id) => {
       </table>
 
       {viewing && (
-        <SummaryDetailModal
-          summary={viewing}
-          onClose={() => setViewing(null)}
-          onSaveContent={handleUpdateContent}
-          onRegenerate={handleRegenerate}
-        />
+       <SummaryDetailModal
+  isOpen={!!viewing} // ✅ Bắt buộc truyền prop này
+  summary={viewing}
+  onClose={() => setViewing(null)}
+  onSaveContent={handleUpdateContent}
+  onRegenerate={handleRegenerate}
+/>
       )}
     </div>
   );

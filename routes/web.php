@@ -34,7 +34,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/tasks/export', [TaskController::class, 'export'])->name('tasks.export');
     //  kpi quản lý
     Route::get('/kpis/export', [KPIController::class, 'export'])->name('kpis.export'); //lí do đặt trước là do resource che mất
-    Route::resource('kpis', KPIController::class);
+    Route::get('/kpis/{kpi}/json', [KPIController::class, 'showJson']);
+   Route::resource('kpis', KPIController::class);
+
+
+
+
     //cap nha trang thai
     Route::post('/tasks/{task}/status', [TaskController::class, 'updateStatus']);
     Route::post('/kpis/{kpi}/status', [KPIController::class, 'updateStatus']);

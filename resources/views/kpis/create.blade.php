@@ -7,30 +7,29 @@
     @csrf
 
     <div class="mb-3">
-        <label>Ngày bắt đầu</label>
-        <input type="date" name="start_date" class="form-control" required>
-    </div>
-
-    <div class="mb-3">
-        <label>Ngày đến hạn</label>
-        <input type="date" name="end_date" class="form-control" required>
+        <label>Tháng</label>
+        <input type="month" name="month" class="form-control" value="{{ old('month') }}" required>
+        @error('month')
+            <div class="text-danger small">{{ $message }}</div>
+        @enderror
     </div>
 
     <div class="mb-3">
         <label>Tên Deadline</label>
-        <input type="text" name="name" class="form-control" required>
+        <input type="text" name="name" class="form-control" value="{{ old('name') }}" required>
+        @error('name')
+            <div class="text-danger small">{{ $message }}</div>
+        @enderror
     </div>
 
     <!-- Danh sách task -->
-    <div id="task-list">
-       <!-- Để trống, không render sẵn -->
-    </div>
+    <div id="task-list"></div>
 
     <button type="button" class="btn btn-secondary mb-3" onclick="addTask()">+ Thêm công việc</button>
 
     <div class="mb-3">
         <label>Ghi chú</label>
-        <textarea name="note" class="form-control" placeholder="Ghi chú (nếu có)"></textarea>
+        <textarea name="note" class="form-control" placeholder="Ghi chú (nếu có)">{{ old('note') }}</textarea>
     </div>
 
     <button class="btn btn-primary">Lưu Deadline</button>
@@ -55,11 +54,9 @@
         </div>
     </div>
 </div>
-
 @endsection
 
 @section('scripts')
-<!-- Select2 -->
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
@@ -67,27 +64,23 @@
 function initSelect(container = document) {
     $(container).find('.select2').select2({
         placeholder: 'Chọn công việc',
-        tags: true, // Cho phép thêm mới
+        tags: true,
         allowClear: true,
         width: '100%'
     });
 }
 
-
-
-
 function addTask() {
     const template = document.getElementById('task-template');
     const clone = template.querySelector('.task-item').cloneNode(true);
-
     document.getElementById('task-list').appendChild(clone);
-
     initSelect(clone);
 }
+
 $(document).ready(() => {
-  
-     addTask(); 
+    addTask();
 });
+
 function removeTask(el) {
     el.closest('.task-item').remove();
 }

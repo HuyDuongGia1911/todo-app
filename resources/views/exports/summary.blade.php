@@ -50,28 +50,51 @@
 
     <tr><td colspan="2"></td></tr>
 
-    <tr>
-        <td colspan="2" style="font-weight: bold;">Công việc trong tháng</td>
-    </tr>
+
 </table>
 
-<table border="1">
-    <thead>
+{{-- ===================== ĐÁNH GIÁ KPI ===================== --}}
+@if(!empty($kpiRows))
+    <br>
+    <table>
         <tr>
-            <th>STT</th>
-            <th>Tên task</th>
-            <th>Tiến độ</th>
-            <th>Ngày thực hiện</th>
+            <td colspan="7"><strong>Đánh giá KPI</strong></td>
         </tr>
-    </thead>
-    <tbody>
-        @foreach($mergedTasks as $idx => $task)
+    </table>
+
+    <table border="1" cellpadding="4" cellspacing="0">
+        <thead>
             <tr>
-                <td>{{ $idx + 1 }}</td>
-                <td>{{ $task['title'] }}</td>
-                <td>{{ $task['progress'] }}</td>
-                <td>{{ implode(', ', $task['dates'] ?? []) }}</td>
+                <th style="text-align:center;">STT</th>
+                <th>Hạng mục KPI</th>
+                <th>Hạng mục công việc</th>
+                <th>Thời gian thực hiện</th>
+                <th style="text-align:right;">KPI</th>
+                <th style="text-align:right;">Kết quả</th>
+                <th style="text-align:center;">Tỷ lệ %</th>
+                <th style="text-align:center;">Đánh giá</th>
             </tr>
-        @endforeach
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach($kpiRows as $i => $row)
+                <tr>
+                    <td style="text-align:center;">{{ $i + 1 }}</td>
+                    <td>{{ $row['kpi_name'] }}</td>
+                    <td>{{ $row['task_title'] }}</td>
+                    <td>{{ $row['time_range'] }}</td>
+                    <td style="text-align:right;">{{ rtrim(rtrim(number_format($row['target'], 2, '.', ''), '0'), '.') }}</td>
+                    <td style="text-align:right;">{{ rtrim(rtrim(number_format($row['result'], 2, '.', ''), '0'), '.') }}</td>
+                    <td style="text-align:center;">{{ $row['percent'] }}%</td>
+                    <td style="text-align:center;">{{ $row['note'] }}</td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+@else
+    <br>
+    <table>
+        <tr>
+            <td><strong>Đánh giá KPI:</strong> Không có KPI nào trong tháng.</td>
+        </tr>
+    </table>
+@endif

@@ -13,4 +13,8 @@ class KPITask extends Model
     {
          return $this->belongsTo(KPI::class, 'kpi_id'); 
     }
+    public function title()
+{
+    return $this->belongsTo(TaskTitle::class, 'task_title', 'title_name');
+}
 }
