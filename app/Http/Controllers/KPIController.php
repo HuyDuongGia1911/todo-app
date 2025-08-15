@@ -10,11 +10,10 @@ use App\Exports\KPIsExport;
 use Maatwebsite\Excel\Facades\Excel;
 class KPIController extends Controller
 {
-    public function index(Request $request)
+   public function index(Request $request)
 {
     $query = KPI::where('user_id', auth()->id())->with('tasks');
 
-    // ?month=2025-08
     if ($request->filled('month')) {
         $m = \Carbon\Carbon::createFromFormat('Y-m', $request->input('month'));
         $start = $m->copy()->startOfMonth()->toDateString();
@@ -25,7 +24,6 @@ class KPIController extends Controller
 
     $kpis = $query->orderBy('end_date')->get();
 
-    // Tính tiến độ thực tế theo tháng cặp start/end đã lưu
     foreach ($kpis as $kpi) {
         $start = min($kpi->start_date, $kpi->end_date);
         $end   = max($kpi->start_date, $kpi->end_date);
@@ -45,11 +43,37 @@ class KPIController extends Controller
             $totalTarget += $task->target_progress ?? 0;
         }
 
-        $kpi->calculated_progress = $totalTarget > 0 ? round($totalActual / $totalTarget * 100) : 0;
+        $kpi->calculated_progress = $totalTarget > 0
+            ? round($totalActual / $totalTarget * 100)
+            : 0;
     }
 
+    // Nếu gọi từ React với ?json=1 → trả JSON
+    if ($request->boolean('json')) {
+        return response()->json([
+            'kpis' => $kpis,
+            'stats' => [
+                'total' => $kpis->count(),
+                'done' => $kpis->where('status', 'Đã hoàn thành')->count(),
+                'pending' => $kpis->filter(fn($k) =>
+                    $k->status !== 'Đã hoàn thành' &&
+                    \Carbon\Carbon::parse($k->end_date)->gte(now())
+                )->count(),
+                'overdue' => $kpis->filter(fn($k) =>
+                    $k->status !== 'Đã hoàn thành' &&
+                    \Carbon\Carbon::parse($k->end_date)->lt(now())
+                )->count(),
+            ],
+            'filters' => [
+                'month' => $request->input('month'),
+            ],
+        ]);
+    }
+
+    // Mặc định vẫn trả view cho Blade
     return view('kpis.index', compact('kpis'));
 }
+
 
 
 

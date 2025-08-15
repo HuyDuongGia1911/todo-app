@@ -7,8 +7,9 @@ import { BsPencil } from "react-icons/bs";
 import { BiDotsVerticalRounded } from "react-icons/bi";
 import { Sun, Sunrise, Moon } from "lucide-react";
 import Modal from "../components/Modal";
-import KpiDetailModal from "../components/KPIDetailModal";
+import KpiDetailModal from "../components/KpiDetailModal"
 import { Dropdown } from 'react-bootstrap';
+import { useEffect } from "react";
 const getCsrfToken = () => document.head.querySelector('meta[name="csrf-token"]')?.content || "";
 
 function useDayInfo() {
@@ -56,11 +57,25 @@ export default function KpiPage({ initialKpis, filters }) {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedKpiId, setSelectedKpiId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [stats, setStats] = useState({});
+const [filtersState, setFilters] = useState(filters || {});
 
   const csrfToken = getCsrfToken();
   const { weekday, date, session, Icon } = useDayInfo();
 
   // ------- Actions -------
+  const fetchKpis = async () => {
+  try {
+    const res = await fetch("/kpis?json=1");
+    const data = await res.json();
+    setKpis(data.kpis);
+    setStats(data.stats);
+    setFilters(data.filters);
+  } catch (error) {
+    console.error("Lỗi khi load KPI:", error);
+  }
+};
+
   const updateStatus = async (id, newStatus) => {
     try {
       const res = await fetch(`/kpis/${id}/status`, {
@@ -74,6 +89,10 @@ export default function KpiPage({ initialKpis, filters }) {
       alert("Lỗi khi cập nhật trạng thái KPI!");
     }
   };
+  useEffect(() => {
+  fetchKpis();
+}, []);
+
 
   const openDetail = (id) => {
     setSelectedKpiId(id);
@@ -355,6 +374,7 @@ export default function KpiPage({ initialKpis, filters }) {
             kpiId={selectedKpiId}
             onClose={() => { setShowDetailModal(false); setSelectedKpiId(null); }}
             onDeleted={handleDeletedFromDetail}
+             reloadKpis={fetchKpis}
           />
         )}
       </Modal>

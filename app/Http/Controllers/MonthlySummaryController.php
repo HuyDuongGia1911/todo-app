@@ -48,23 +48,36 @@ public function show(MonthlySummary $summary)
     $month = Carbon::parse($summary->month);
 
     // Lấy tất cả KPI của user trong tháng
-    $kpis = KPI::with('tasks')
-        ->where('user_id', $summary->user_id)
-        ->whereDate('start_date', '<=', $month->endOfMonth())
-        ->whereDate('end_date', '>=', $month->startOfMonth())
-        ->get()
-        ->map(function ($kpi) {
-            return [
-                'id' => $kpi->id,
-                'name' => $kpi->name,
-                'note' => $kpi->note,
-                'task_names' => $kpi->tasks->pluck('task_title')->implode(', '),
-                'task_names_array' => $kpi->tasks->pluck('task_title')->toArray(), // Sửa tại đây
-                  'task_targets' => $kpi->tasks->pluck('target_progress', 'task_title'),
-            ];
-        })
-        ->values()
-        ->toArray();
+   $kpis = KPI::with('tasks')
+    ->where('user_id', $summary->user_id)
+    ->whereDate('start_date', '<=', $month->endOfMonth())
+    ->whereDate('end_date', '>=', $month->startOfMonth())
+    ->get()
+    ->map(function ($kpi) {
+        $tasks = $kpi->tasks;
+
+        // Chỉ lấy task có status === 'Đã hoàn thành'
+        $completedTasks = $tasks->filter(fn($t) => $t->status === 'Đã hoàn thành');
+
+        $totalTarget = $tasks->sum('target_progress');
+        $completedTarget = $completedTasks->sum('target_progress');
+
+        $progress = $totalTarget > 0 ? round(($completedTarget / $totalTarget) * 100, 2) : 0;
+
+        return [
+            'id' => $kpi->id,
+            'name' => $kpi->name,
+            'note' => $kpi->note,
+            'task_names' => $tasks->pluck('task_title')->implode(', '),
+            'task_names_array' => $tasks->pluck('task_title')->toArray(),
+            'task_targets' => $tasks->pluck('target_progress', 'task_title'),
+            'progress' => $progress,
+            'completed_count' => $completedTasks->count(),
+            'total_count' => $tasks->count(),
+        ];
+    })
+    ->values()
+    ->toArray();
 
     return response()->json([
         'id' => $summary->id,
@@ -177,19 +190,24 @@ private function computeTasksForMonth(string $ym, int $userId): array
 
     // Gộp task theo title
     $merged = [];
-    foreach ($tasks as $task) {
-        $title = $task->title ?? '(Không tên)';
-        if (!isset($merged[$title])) {
-            $merged[$title] = [
-                'title' => $title,
-                'progress' => $task->progress ?? 0,
-                'dates' => [$task->task_date],
-            ];
-        } else {
-            $merged[$title]['progress'] += $task->progress ?? 0;
-            $merged[$title]['dates'][] = $task->task_date;
-        }
+foreach ($tasks as $task) {
+    $title = $task->title ?? '(Không tên)';
+    if (!isset($merged[$title])) {
+        $merged[$title] = [
+            'title' => $title,
+            'progress' => 0,
+            'dates' => [],
+            'status' => $task->status ?? null,
+        ];
     }
+
+    if ($task->status === 'Đã hoàn thành') {
+        $merged[$title]['progress'] += $task->progress ?? 0;
+    }
+
+    $merged[$title]['dates'][] = $task->task_date;
+}
+
 
     // Cập nhật thống kê
     $today = Carbon::today();

@@ -3,30 +3,29 @@ import { Form, Button, Row, Col } from "react-bootstrap";
 import AsyncDropdownSelect from "./AsyncDropdownSelect";
 import Swal from "sweetalert2";
 
-export default function KpiDetailModal({ kpiId, onDeleted }) {
+export default function KpiDetailModal({ kpiId, onDeleted, onClose, reloadKpis }) {
   const [form, setForm] = useState(null);
   const [readOnly, setReadOnly] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
 
-  useEffect(() => {
-    fetch(`/kpis/${kpiId}/json`)
-      .then((res) => res.json())
+ useEffect(() => {
+  fetch(`/kpis/${kpiId}/json`, {
+    headers: { Accept: "application/json" }
+  })
+    .then(res => res.json())
     .then(({ kpi, tasks }) => {
-  const month = (kpi.start_date || '').slice(0, 7); // YYYY-MM from start_date
-  const formatted = {
-    month,
-    name: kpi.name,
-    note: kpi.note || "",
-    tasks: tasks.map((t) => ({
-      title: t.title,
-      target: t.target,
-    })),
-  };
-  setForm(formatted);
-})
-      .catch(() => Swal.fire("Lỗi", "Không thể tải dữ liệu KPI", "error"));
-  }, [kpiId]);
+      const month = (kpi.start_date || '').slice(0, 7);
+      setForm({
+        month,
+        name: kpi.name,
+        note: kpi.note || "",
+        tasks: tasks.map(t => ({ title: t.title, target: t.target })),
+      });
+    })
+    .catch(() => Swal.fire("Lỗi", "Không thể tải dữ liệu KPI", "error"));
+}, [kpiId]);
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -104,6 +103,8 @@ const res = await fetch(`/kpis/${kpiId}`, {
     }
 
     await Swal.fire("Thành công", "Cập nhật KPI thành công", "success");
+    onClose();
+    reloadKpis?.()
     setReadOnly(true);
   } catch (err) {
     console.error("Lỗi không xác định:", err);
